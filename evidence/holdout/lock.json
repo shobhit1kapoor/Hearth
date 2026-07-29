@@ -1,0 +1,10 @@
+{
+  "suite": "HEARTH external-style holdout",
+  "version": "2026-07-29.1",
+  "lockedAt": "2026-07-29T12:00:00.000Z",
+  "casesSha256": "d6c64f2a997682c8aa206bafb4d4e3f07a703b47f2133d8dfe667ec79600faeb",
+  "groundTruthSha256": "b4954d2511a88d066c5312bdfc190c095f337bfe9d60dd2e40d6c7b038db3fd6",
+  "executionCount": 1,
+  "note": "Cases and ground truth were hashed before the first and only recorded execution.",
+  "executedAt": "2026-07-29T12:07:47.884Z"
+}

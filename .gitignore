@@ -43,3 +43,8 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+# local document and browser QA artifacts
+/.lo_profile_*/
+/.tmp-*.log
+/evidence/rendered/

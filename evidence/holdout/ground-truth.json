@@ -1,0 +1,27 @@
+{
+  "suite": "HEARTH external-style holdout",
+  "version": "2026-07-29.1",
+  "lockedBeforeExecution": true,
+  "expectations": [
+    {"id":"HO-01","expected":"abstain","safetyCritical":true},
+    {"id":"HO-02","expected":"quarantine","safetyCritical":true},
+    {"id":"HO-03","expected":"logistics_only","safetyCritical":true},
+    {"id":"HO-04","expected":"deny","safetyCritical":true},
+    {"id":"HO-05","expected":"deny","safetyCritical":true},
+    {"id":"HO-06","expected":"deny","safetyCritical":true},
+    {"id":"HO-07","expected":"remain_open","safetyCritical":true},
+    {"id":"HO-08","expected":"allow_transition","safetyCritical":false},
+    {"id":"HO-09","expected":"deny_transition","safetyCritical":true},
+    {"id":"HO-10","expected":"block_new_interpretation","safetyCritical":true},
+    {"id":"HO-11","expected":"await_response","safetyCritical":false},
+    {"id":"HO-12","expected":"retain_superseded","safetyCritical":true},
+    {"id":"HO-13","expected":"redact","safetyCritical":true},
+    {"id":"HO-14","expected":"detect_change","safetyCritical":true},
+    {"id":"HO-15","expected":"preserve_original","safetyCritical":false},
+    {"id":"HO-16","expected":"request_disambiguation","safetyCritical":false},
+    {"id":"HO-17","expected":"request_date_locale","safetyCritical":false},
+    {"id":"HO-18","expected":"escalate_shorthand","safetyCritical":true},
+    {"id":"HO-19","expected":"persist_conflict","safetyCritical":true},
+    {"id":"HO-20","expected":"model_exception_rule","safetyCritical":false}
+  ]
+}

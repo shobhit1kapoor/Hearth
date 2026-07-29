@@ -901,6 +901,160 @@ export function capacitySummary(resolution: DemoResolution) {
   };
 }
 
+const lifecycleTransitions: Record<LifecycleState, LifecycleState[]> = {
+  Identified: ["Needs review", "Assigned", "Blocked", "Cancelled", "Superseded"],
+  "Needs review": ["Assigned", "Blocked", "Escalated", "Cancelled", "Superseded"],
+  Assigned: ["Awaiting acceptance", "Accepted", "Blocked", "Cancelled", "Superseded"],
+  "Awaiting acceptance": ["Accepted", "Assigned", "Blocked", "Cancelled", "Superseded"],
+  Accepted: ["In progress", "Blocked", "Cancelled", "Superseded"],
+  "In progress": ["Awaiting external response", "Blocked", "Escalated", "Completed", "Cancelled", "Superseded"],
+  "Awaiting external response": ["In progress", "Blocked", "Escalated", "Completed", "Cancelled", "Superseded"],
+  Blocked: ["Needs review", "Assigned", "Escalated", "Cancelled", "Superseded"],
+  Escalated: ["Needs review", "Assigned", "Blocked", "Cancelled", "Superseded"],
+  Completed: ["Verified", "Needs review", "Superseded"],
+  Verified: ["Needs review", "Superseded"],
+  Cancelled: ["Needs review", "Superseded"],
+  Superseded: [],
+};
+
+export function canTransition(from: LifecycleState, to: LifecycleState) {
+  return lifecycleTransitions[from].includes(to);
+}
+
+export function transitionCommitment(
+  item: Commitment,
+  to: LifecycleState,
+  evidence?: string,
+): { allowed: boolean; reason: string; next: Commitment } {
+  if (!canTransition(item.state, to)) {
+    return { allowed: false, reason: `Transition ${item.state} → ${to} is not permitted.`, next: item };
+  }
+  if ((to === "Completed" || to === "Verified") && !evidence?.trim()) {
+    return { allowed: false, reason: "Outcome evidence is required before completion or verification.", next: item };
+  }
+  return {
+    allowed: true,
+    reason: "Transition allowed.",
+    next: {
+      ...item,
+      state: to,
+      evidence: evidence?.trim() || item.evidence,
+      history: [
+        ...item.history,
+        {
+          at: "2026-07-29 12:00",
+          actor: "HEARTH deterministic compiler v0.4",
+          action: to,
+          note: evidence?.trim() || "Lifecycle transition recorded.",
+        },
+      ],
+    },
+  };
+}
+
+export type AccessRequest = {
+  actor: string;
+  householdId: string;
+  objectHouseholdId: string;
+  purpose: string;
+  categories: string[];
+  expiresAt?: string;
+  revoked?: boolean;
+};
+
+export function authorizeAccess(request: AccessRequest, now = "2026-07-29T12:00:00.000Z") {
+  if (request.householdId !== request.objectHouseholdId) {
+    return { allowed: false, reason: "Cross-household access denied.", disclosed: [] as string[] };
+  }
+  if (request.revoked) {
+    return { allowed: false, reason: "Permission was revoked.", disclosed: [] as string[] };
+  }
+  if (request.expiresAt && Date.parse(request.expiresAt) <= Date.parse(now)) {
+    return { allowed: false, reason: "Permission expired.", disclosed: [] as string[] };
+  }
+  const disclosure = minimumNecessaryDisclosure(request.purpose);
+  if (disclosure.allowed.length === 0) {
+    return { allowed: false, reason: "No purpose-specific permission.", disclosed: [] as string[] };
+  }
+  const disclosed = request.categories.filter((category) => disclosure.allowed.includes(category));
+  return { allowed: true, reason: "Purpose-specific minimum disclosure applied.", disclosed };
+}
+
+export function detectPromptInjection(input: string) {
+  const matched = /(ignore|override|bypass).{0,30}(policy|safety|instruction|permission)|system\s+prompt|developer\s+message/i.test(input);
+  return {
+    quarantined: matched,
+    action: matched ? "Treat as untrusted source text; do not change mission state." : "Continue source review.",
+  };
+}
+
+export function safeOutageState(service: "model" | "pharmacy" | "provider") {
+  if (service === "model") {
+    return { state: "Blocked" as const, behavior: "Retain deterministic task view and suspend new interpretations." };
+  }
+  return {
+    state: "Awaiting external response" as const,
+    behavior: `Keep the responsibility open; record ${service} non-response and use the configured escalation window.`,
+  };
+}
+
+export function redactLog(value: string) {
+  return value
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email redacted]")
+    .replace(/\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g, "[phone redacted]")
+    .replace(/\b\d{3}-\d{2}-\d{4}\b/g, "[identifier redacted]");
+}
+
+export function correctionHistory(original: string, corrected: string, reason: string) {
+  return {
+    original,
+    corrected,
+    reason,
+    originalPreserved: true,
+    changedAt: "2026-07-29T12:00:00.000Z",
+  };
+}
+
+export function auditChain(events: Array<{ action: string; actor: string }>) {
+  let previous = "GENESIS";
+  return events.map((entry, index) => {
+    const material = `${previous}|${index}|${entry.actor}|${entry.action}`;
+    let hash = 2166136261;
+    for (let i = 0; i < material.length; i += 1) {
+      hash ^= material.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    const current = (hash >>> 0).toString(16).padStart(8, "0");
+    const record = { ...entry, previous, hash: current };
+    previous = current;
+    return record;
+  });
+}
+
+export function exportHouseholdRecord(householdId: string, items: Commitment[]) {
+  return {
+    schema: "hearth-household-export/v1",
+    householdId,
+    exportedAt: "2026-07-29T12:00:00.000Z",
+    commitments: items.map(({ id, responsibility, state, evidence, history }) => ({
+      id,
+      responsibility,
+      state,
+      evidence,
+      history,
+    })),
+  };
+}
+
+export function requestHouseholdDeletion(householdId: string) {
+  return {
+    householdId,
+    status: "Deletion requested" as const,
+    requestedAt: "2026-07-29T12:00:00.000Z",
+    note: "Prototype records the request; production retention and identity verification remain partner-defined.",
+  };
+}
+
 export const accountabilityReceipts = [
   {
     id: "AR-1042",
@@ -945,4 +1099,3 @@ export const accountabilityReceipts = [
     next: "Request approved source",
   },
 ];
-

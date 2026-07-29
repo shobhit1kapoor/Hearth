@@ -34,6 +34,7 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import BurdenStudy from "./BurdenStudy";
 import {
   accountabilityReceipts,
   capacitySummary,
@@ -65,6 +66,7 @@ type Screen =
   | "receipts"
   | "trust"
   | "evidence"
+  | "study"
   | "demo";
 
 const navItems: {
@@ -87,6 +89,7 @@ const navItems: {
   { id: "receipts", label: "Accountability receipts", icon: ReceiptText, group: "Proof" },
   { id: "trust", label: "Trust & privacy", icon: Archive, group: "Proof" },
   { id: "evidence", label: "Evidence & validation", icon: BookOpenCheck, group: "Proof" },
+  { id: "study", label: "Timed burden study", icon: Clock3, group: "Proof" },
   { id: "demo", label: "Guided reviewer demo", icon: Sparkles, group: "Proof" },
 ];
 
@@ -1103,6 +1106,7 @@ function EvidenceScreen() {
       <div className="evidence-banner">
         <div><span>Smart 40</span><strong>40 / 40</strong><small>consecutive controlled cases</small></div>
         <div><span>Focused benchmark</span><strong>60 / 60</strong><small>six safety and workflow groups</small></div>
+        <div><span>External-style holdout</span><strong>15 / 20</strong><small>five first-run failures retained</small></div>
         <div><span>Required abstentions</span><strong>4 / 4</strong><small>including Protocol 9-Delta</small></div>
         <div><span>Permission violations</span><strong>0</strong><small>in locked synthetic tests</small></div>
       </div>
@@ -1131,10 +1135,16 @@ function EvidenceScreen() {
           <span className="flag flag-reviewed">Passed · H3 abstention</span>
         </article>
         <article>
+          <p className="eyebrow">Locked holdout</p>
+          <h2>Five failures retained</h2>
+          <p>Duplicate-name assignment, ambiguous dates, clinical shorthand, conflicting corrections, and recurring exceptions exposed real gaps. Two safety-taxonomy misses remain Phase 2 release blockers.</p>
+          <span className="flag flag-review">15 / 20 · no reruns</span>
+        </article>
+        <article>
           <p className="eyebrow">Burden benchmark</p>
           <h2>No fictional time-saving claim</h2>
-          <p>The repository includes the timed comparison protocol, event schema, and success measures. Net time saved remains unmeasured until observed caregiver testing.</p>
-          <span className="flag flag-review">Phase 2 measurement required</span>
+          <p>The product now includes a resettable eight-task timer, interaction/help/correction counts, confidence, effort, feedback, and JSON export. Net time saved remains unmeasured.</p>
+          <span className="flag flag-review">0 participants · instrument ready</span>
         </article>
         <article>
           <p className="eyebrow">Research evidence</p>
@@ -1172,7 +1182,7 @@ function DemoScreen({
         description="Each step changes real mission state, preserves evidence, and maintains human or professional authority."
       >
         <button className="secondary-button" onClick={() => setResolution(initialResolution)}>
-          <RefreshCcw size={16} /> Reset demo
+          <RefreshCcw size={16} /> Reset Reviewer Demo
         </button>
       </ScreenHeader>
       <section className="demo-status">
@@ -1257,6 +1267,7 @@ export default function HearthApp() {
       case "receipts": return <ReceiptsScreen />;
       case "trust": return <TrustScreen />;
       case "evidence": return <EvidenceScreen />;
+      case "study": return <BurdenStudy />;
       case "demo": return <DemoScreen resolution={resolution} setResolution={setResolution} mission={mission} />;
     }
   };
@@ -1306,6 +1317,7 @@ export default function HearthApp() {
             <span className="synthetic-chip">Synthetic data</span>
             <StatusMark status={mission.status} />
             <button className="reviewer-button" onClick={() => goTo("demo")}>Reviewer demo</button>
+            <button className="reviewer-button reviewer-reset" onClick={() => { setResolution(initialResolution); goTo("demo"); }}>Reset Reviewer Demo</button>
           </div>
         </header>
         <main id="main-content" tabIndex={-1} className={screen === "welcome" ? "welcome-main" : ""}>

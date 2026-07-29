@@ -1,15 +1,11 @@
-# Research-driven design change log
+# Research-informed design change log
 
-> No HEARTH interview materials were available, so no interview-caused product change is claimed.
+No design change is attributed to a real caregiver because no consented source was supplied.
 
-Future entries will include:
+| Date | Input source | Evidence | Decision | Product location | Verification |
+|---|---|---|---|---|---|
+| 2026-07-29 | Competition hardening brief | Timed comparison required | Added resettable eight-task burden-study mode | Timed burden study screen | Build, typecheck, lint, and representative accessibility audit pass; participant use pending |
+| 2026-07-29 | Controlled holdout failures | Duplicate names and ambiguous dates were mishandled | Retained failures; documented Phase 2 identity and locale controls | Holdout report | First run locked |
+| 2026-07-29 | Accessibility review plan | Reviewers need keyboard/mobile evidence | Added explicit audit matrix and evidence capture plan | Accessibility evidence | Zero axe violations; skip navigation, sampled focus, contrast, and 320px checks pass; caregiver screen-reader session pending |
 
-- anonymized insight identifier;
-- original design;
-- evidence and any disagreement;
-- changed design;
-- decision owner and date;
-- validation method;
-- residual concern.
-
-The current product decisions trace only to the supplied challenge brief and official ACL criteria.
+Future rows based on caregiver evidence must include a consented source identifier and should record rejected design suggestions as well as accepted ones.
