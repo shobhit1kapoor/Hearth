@@ -1,0 +1,31 @@
+{
+  "resourceType": "Bundle",
+  "id": "synthetic-hearth-bundle",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://hearth.example/synthetic",
+        "code": "DEMO-ONLY"
+      }
+    ]
+  },
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "synthetic-eleanor",
+        "birthDate": "1948-02-12"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "CarePlan",
+        "id": "synthetic-transition-plan",
+        "status": "active",
+        "intent": "plan",
+        "description": "Synthetic post-discharge transition plan; no real interoperability connection."
+      }
+    }
+  ]
+}

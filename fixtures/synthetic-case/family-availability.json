@@ -1,0 +1,22 @@
+{
+  "synthetic": true,
+  "weekOf": "2026-07-27",
+  "primaryCaregiver": {
+    "name": "Maya Kapoor",
+    "availableCareHours": 20,
+    "weekdayArrival": "18:45",
+    "externalActionPreference": "Prepare"
+  },
+  "support": [
+    {
+      "name": "Daniel Kapoor",
+      "availableFor": ["transportation", "pharmacy pickup"],
+      "clinicalAccess": false
+    },
+    {
+      "name": "Robert Brooks",
+      "availableFor": ["home safety", "supply check", "supported daily monitoring"],
+      "constraints": ["mobility limitation", "hearing limitation"]
+    }
+  ]
+}

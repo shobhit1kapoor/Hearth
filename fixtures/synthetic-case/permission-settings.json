@@ -1,0 +1,23 @@
+{
+  "synthetic": true,
+  "careRecipient": "Eleanor Brooks",
+  "decisionSupport": "supported decision-making",
+  "defaultExternalAction": "Prepare",
+  "permissions": [
+    {
+      "purpose": "transportation",
+      "role": "Daniel Kapoor",
+      "allowed": ["date", "time", "location", "mobility support", "contact instructions"],
+      "withheld": ["diagnosis", "medication list", "insurance", "caregiver-private notes"],
+      "expires": "2026-08-01T18:00:00-05:00",
+      "revocable": true
+    },
+    {
+      "purpose": "medication reconciliation",
+      "role": "pharmacist",
+      "allowed": ["medicine name", "conflicting dose excerpts", "source dates", "callback"],
+      "expires": "on-resolution",
+      "revocable": true
+    }
+  ]
+}
