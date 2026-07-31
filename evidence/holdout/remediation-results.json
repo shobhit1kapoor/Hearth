@@ -1,6 +1,6 @@
 {
   "run": {
-    "executedAt": "2026-07-31T11:35:34.668Z",
+    "executedAt": "2026-07-31T14:44:37.337Z",
     "configuration": "hearth-safety-controls-v0.5",
     "originalResultsSha256": "d0390d069f2d9e28e09d5907f2a64153f11a6a6210c6f351ecc05d52bf0ee0a8",
     "preservesOriginalHoldout": true

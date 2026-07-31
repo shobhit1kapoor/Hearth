@@ -67,9 +67,9 @@ Configuration details are in [docs/production-setup.md](docs/production-setup.md
 - Public synthetic reviewer deployment: working at the link above.
 - Production build and local automated checks: passing.
 - Production dependency audit: zero known production vulnerabilities.
-- Production service readiness: Supabase, NVIDIA, Resend, Sentry, and database-backed rate limiting are active.
+- Production service readiness: Supabase, NVIDIA, Resend, Sentry, and database-backed rate limiting are active. Resend still needs a verified sending domain for automatic delivery to arbitrary family addresses; manual invitation fallback works now.
 - Live Supabase core, remediation, and rate-limit migrations: applied and verified.
 - A repeatable synthetic caregiver household can be provisioned with `npm run seed:synthetic`; its password stays in the ignored `.env.synthetic.local` file.
-- Two-account persistence acceptance: passed for invitation, acceptance, minimum disclosure, permission revocation, and membership revocation.
+- Live production acceptance: passed for Protocol 9-Delta refusal, invitation, acceptance, minimum disclosure, permission revocation, membership revocation, and NVIDIA note processing.
 
 HEARTH is not a medical device, clinical decision system, or emergency service. All reviewer data is synthetic.
