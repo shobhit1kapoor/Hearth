@@ -21,6 +21,6 @@ export async function sendHearthEmail(input: {
     text: input.text,
     headers: { "X-HEARTH-Message-Type": "care-coordination" },
   }, { idempotencyKey: input.idempotencyKey });
-  if (error) throw new Error(`Email delivery failed: ${error.message}`);
+  if (error) return { sent: false as const, reason: "email_delivery_failed" };
   return { sent: true as const, id: data?.id };
 }

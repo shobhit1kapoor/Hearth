@@ -12,6 +12,7 @@ import {
   analyzeDocumentResultSchema,
   compareResultSchema,
   draftQuestionResultSchema,
+  jsonSchemaInstruction,
   translationResultSchema,
 } from "./schemas";
 import {
@@ -41,17 +42,26 @@ export class NvidiaNimProvider implements HearthAIProvider {
         image_url: { url: `data:${image.mimeType};base64,${image.base64}` },
       });
     }
-    const content = await this.complete(userContent);
+    const content = await this.complete(
+      userContent,
+      jsonSchemaInstruction("document analysis", analyzeDocumentResultSchema),
+    );
     return parseStructuredOutput(content, analyzeDocumentResultSchema);
   }
 
   async compareInstructions(input: CompareInput) {
-    const content = await this.complete(comparePrompt(input));
+    const content = await this.complete(
+      comparePrompt(input),
+      jsonSchemaInstruction("instruction comparison", compareResultSchema),
+    );
     return parseStructuredOutput(content, compareResultSchema);
   }
 
   async translateInstruction(input: TranslationInput) {
-    const content = await this.complete(translationPrompt(input));
+    const content = await this.complete(
+      translationPrompt(input),
+      jsonSchemaInstruction("translation", translationResultSchema),
+    );
     const result = parseStructuredOutput(content, translationResultSchema);
     const missing = input.protectedTerms.filter((term) => !result.translatedText.includes(term));
     if (missing.length > 0) {
@@ -66,11 +76,14 @@ export class NvidiaNimProvider implements HearthAIProvider {
   }
 
   async draftProfessionalQuestion(input: DraftQuestionInput) {
-    const content = await this.complete(draftQuestionPrompt(input));
+    const content = await this.complete(
+      draftQuestionPrompt(input),
+      jsonSchemaInstruction("professional question draft", draftQuestionResultSchema),
+    );
     return parseStructuredOutput(content, draftQuestionResultSchema);
   }
 
-  private async complete(userContent: string | Array<Record<string, unknown>>) {
+  private async complete(userContent: string | Array<Record<string, unknown>>, responseContract: string) {
     const env = getServerEnvironment();
     if (!env.ENABLE_REAL_AI || !env.NVIDIA_API_KEY) {
       throw new AIProviderUnavailableError();
@@ -90,7 +103,7 @@ export class NvidiaNimProvider implements HearthAIProvider {
         body: JSON.stringify({
           model: env.NVIDIA_MODEL,
           messages: [
-            { role: "system", content: HEARTH_SYSTEM_PROMPT },
+            { role: "system", content: `${HEARTH_SYSTEM_PROMPT}\n\n${responseContract}` },
             { role: "user", content: userContent },
           ],
           max_tokens: 12_000,

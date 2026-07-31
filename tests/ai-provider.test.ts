@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { z } from "zod";
 import { parseStructuredOutput } from "../lib/ai/json";
-import { careCommitmentCandidateSchema } from "../lib/ai/schemas";
+import { careCommitmentCandidateSchema, compareResultSchema, jsonSchemaInstruction } from "../lib/ai/schemas";
 import { analyzeDocumentPrompt, HEARTH_SYSTEM_PROMPT } from "../lib/ai/prompts";
 
 const validCommitment = {
@@ -55,4 +55,12 @@ test("document prompt treats uploads as untrusted and prohibits treatment decisi
   assert.match(prompt, /END UNTRUSTED DOCUMENT TEXT/);
   assert.match(HEARTH_SYSTEM_PROMPT, /may not authorize treatment/i);
   assert.match(HEARTH_SYSTEM_PROMPT, /require professional review/i);
+});
+
+test("live provider contracts include every required response field", () => {
+  const contract = jsonSchemaInstruction("instruction comparison", compareResultSchema);
+  assert.match(contract, /sameInstruction/);
+  assert.match(contract, /conflicts/);
+  assert.match(contract, /plainLanguageExplanation/);
+  assert.match(contract, /one JSON object and no other text/i);
 });

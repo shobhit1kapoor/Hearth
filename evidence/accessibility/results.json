@@ -1,33 +1,33 @@
 {
-  "auditedAt": "2026-07-31T08:34:38.119Z",
-  "baseUrl": "http://127.0.0.1:3001",
+  "auditedAt": "2026-07-31T08:56:58.916Z",
+  "baseUrl": "https://hearth-care-five.vercel.app",
   "tool": "Playwright + axe-core",
   "axe": {
     "pages": [
       {
         "label": "Caregiver entry",
-        "url": "http://127.0.0.1:3001/",
+        "url": "https://hearth-care-five.vercel.app/",
         "violations": [],
         "passes": 18,
         "incomplete": 1
       },
       {
         "label": "Sample case home",
-        "url": "http://127.0.0.1:3001/",
+        "url": "https://hearth-care-five.vercel.app/",
         "violations": [],
         "passes": 22,
         "incomplete": 1
       },
       {
         "label": "Reviewer tour",
-        "url": "http://127.0.0.1:3001/",
+        "url": "https://hearth-care-five.vercel.app/",
         "violations": [],
         "passes": 22,
         "incomplete": 1
       },
       {
         "label": "Usability study",
-        "url": "http://127.0.0.1:3001/",
+        "url": "https://hearth-care-five.vercel.app/",
         "violations": [],
         "passes": 25,
         "incomplete": 1

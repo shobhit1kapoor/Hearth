@@ -28,7 +28,7 @@ const serverEnvironmentSchema = z.object({
   ENABLE_REAL_AI: booleanWithDefault(false),
   NVIDIA_API_KEY: optionalText(),
   NVIDIA_BASE_URL: z.string().url().default("https://integrate.api.nvidia.com/v1"),
-  NVIDIA_MODEL: z.string().min(1).default("moonshotai/kimi-k2.6"),
+  NVIDIA_MODEL: z.string().min(1).default("nvidia/llama-3.1-nemotron-nano-vl-8b-v1"),
   NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalText(),
   SUPABASE_SERVICE_ROLE_KEY: optionalText(),
