@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-07-31T08:56:58.916Z",
+  "auditedAt": "2026-07-31T10:30:24.196Z",
   "baseUrl": "https://hearth-care-five.vercel.app",
   "tool": "Playwright + axe-core",
   "axe": {

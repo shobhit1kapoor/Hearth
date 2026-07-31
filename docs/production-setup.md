@@ -18,19 +18,20 @@ Copy `.env.example` to `.env.local`. Never commit `.env.local`.
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` — server only.
 
-Apply `supabase/migrations/202607300001_hearth_core.sql`. It creates the complete data model, indexes, private storage buckets, role helpers, RLS policies, user-profile trigger, and atomic onboarding function.
+Apply all files in `supabase/migrations` in filename order. They create the complete data model, private storage, permission-aware policies, holdout safety controls, invitation acceptance, and database-backed rate limiting.
 
 ### NVIDIA NIM
 
 - `NVIDIA_API_KEY` — server only.
 - `NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1`
-- `NVIDIA_MODEL=moonshotai/kimi-k2.6`
+- `NVIDIA_MODEL=nvidia/llama-3.1-nemotron-nano-vl-8b-v1`
 
 The provider uses bounded retries, a timeout, strict JSON parsing, and Zod validation. Failure leaves work in a safe waiting state.
 
-### Upstash, Resend, and Sentry
+### Rate limiting, Resend, and Sentry
 
-- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
+- Supabase provides the primary production rate limiter after the service-rate-limit migration is applied.
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` are optional fallbacks and require a write-capable token.
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`
 
