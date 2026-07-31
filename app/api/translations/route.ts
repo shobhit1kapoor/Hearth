@@ -7,7 +7,7 @@ import { apiError } from "@/lib/server/responses";
 import { requireSameOrigin } from "@/lib/server/csrf";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 180;
 
 export async function POST(request: Request) {
   try {
