@@ -8,13 +8,13 @@ HEARTH does not diagnose, choose between conflicting medical instructions, or ch
 
 [Open the safe synthetic reviewer build](https://hearth-care-five.vercel.app).
 
-Choose **Try the sample case**. Real caregiver data remains disabled on this deployment because its external services are not configured.
+Choose **Try the sample case** for the fastest review. The private caregiver workspace is also connected for controlled testing. Real patient data remains disabled on the public deployment.
 
 ## What you can test now
 
 The **sample case** is fully local, synthetic, and resettable. It contains 10 example sources and 26 care responsibilities. Use it to test medication-conflict blocking, task assignment, minimum disclosure, permissions, workload support, translation safety, and the nine-step reviewer tour.
 
-The **real caregiver workspace** is implemented but intentionally unavailable until Supabase and the other approved services are configured. It never silently substitutes browser-only storage for real persistence.
+The **private caregiver workspace** supports accounts, persistent care spaces, document analysis, family invitations, explicit invitation acceptance, minimum-disclosure permissions, and immediate access revocation. Use only synthetic or properly de-identified information during testing.
 
 ## Start the app
 
@@ -49,7 +49,9 @@ npm audit --omit=dev
 ## Configure real caregiver mode
 
 1. Copy `.env.example` to `.env.local`.
-2. Create a Supabase project and apply `supabase/migrations/202607300001_hearth_core.sql`.
+2. Create a Supabase project and apply these migrations in order:
+   - `supabase/migrations/202607300001_hearth_core.sql`
+   - `supabase/migrations/202607310001_holdout_remediation.sql`
 3. Fill in the Supabase browser and server keys.
 4. Add NVIDIA NIM, Upstash, Resend, and Sentry settings.
 5. Keep `ALLOW_REAL_PATIENT_DATA=false` until an approved privacy and deployment review says otherwise.
@@ -63,7 +65,8 @@ Configuration details are in [docs/production-setup.md](docs/production-setup.md
 - Public synthetic reviewer deployment: working at the link above.
 - Production build and local automated checks: passing.
 - Production dependency audit: zero known production vulnerabilities.
-- Live Supabase migration, NVIDIA request, email delivery, rate limiting, and Sentry event: not yet verified because those service credentials are not configured.
-- Real persistence acceptance: not yet run.
+- Production service readiness: Supabase, NVIDIA, Upstash, Resend, and Sentry are connected.
+- Live Supabase core and remediation migrations: applied and verified.
+- Two-account persistence acceptance: passed for invitation, acceptance, minimum disclosure, permission revocation, and membership revocation.
 
 HEARTH is not a medical device, clinical decision system, or emergency service. All reviewer data is synthetic.

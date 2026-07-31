@@ -2,6 +2,8 @@
 
 HEARTH is not production-ready until every item below has evidence from a configured deployment.
 
+Automated live check: run `$env:RUN_PRODUCTION_ACCEPTANCE='true'; npm run validate:production` from PowerShell. It creates two temporary synthetic accounts, verifies invitation acceptance, minimum disclosure, permission revocation, and membership revocation, then deletes its test data. This covers items 1, 5, 6, and 7 below; the remaining items still require their listed evidence.
+
 ## Required checks
 
 1. Create account A, complete onboarding, and create a care space.

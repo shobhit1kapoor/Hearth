@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+export function jsonSchemaInstruction(name: string, schema: z.ZodType) {
+  return `Return one JSON object and no other text. The object must satisfy this JSON Schema for ${name}: ${JSON.stringify(z.toJSONSchema(schema))}`;
+}
+
 export const evidenceKindSchema = z.enum([
   "verified_source_fact",
   "caregiver_report",

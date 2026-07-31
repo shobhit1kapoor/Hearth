@@ -33,3 +33,37 @@ test("readiness response exposes service state without returning credentials", a
   assert.match(env, /realPatientDataAllowed/);
   assert.match(env, /publicDemo/);
 });
+
+test("upload analysis applies ambiguity, shorthand, and recurring-exception controls", async () => {
+  const source = await read("../app/api/uploads/route.ts");
+  assert.match(source, /resolveNumericDate\(sourceText\)/);
+  assert.match(source, /assessClinicalShorthand\(sourceText\)/);
+  assert.match(source, /modelRecurringSchedule\(sourceText\)/);
+  assert.match(source, /due_at: item\.dueDate && !dateNeedsReview/);
+  assert.match(source, /state = shorthandNeedsReview[\s\S]*"escalated"/);
+});
+
+test("corrections use optimistic concurrency and persist disagreements", async () => {
+  const source = await read("../app/api/commitments/[id]/route.ts");
+  assert.match(source, /current\.version !== input\.baseVersion/);
+  assert.match(source, /\.eq\("version", input\.baseVersion\)/);
+  assert.match(source, /\.from\("commitment_correction_conflicts"\)/);
+  assert.match(source, /code: "CORRECTION_CONFLICT"/);
+});
+
+test("family invitations require sign-in, same-origin acceptance, and a database claim function", async () => {
+  const source = await read("../app/api/family/invitations/route.ts");
+  assert.match(source, /requireUser\(\)/);
+  assert.match(source, /requireSameOrigin\(request\)/);
+  assert.match(source, /list_my_care_space_invitations/);
+  assert.match(source, /accept_care_space_invitation/);
+});
+
+test("rate limiting prefers the atomic database limiter and keeps safe fallbacks", async () => {
+  const source = await read("../lib/server/rate-limit.ts");
+  assert.match(source, /createSupabaseAdminClient/);
+  assert.match(source, /\.from\("service_rate_limits"\)/);
+  assert.match(source, /\.eq\("request_count", current\.request_count\)/);
+  assert.match(source, /Ratelimit\.slidingWindow/);
+  assert.match(source, /memoryWindows/);
+});

@@ -10,7 +10,7 @@ HEARTH converts fragmented synthetic care information into source-grounded commi
 
 ## Evidence boundary
 
-HEARTH is a TRL-3 proof of concept using synthetic data and simulated adapters. It is not medical advice, a production clinical system, a HIPAA certification claim, or evidence of caregiver outcomes. The controlled suites pass 40/40 and 60/60; the first locked external-style holdout passes 15/20 with five failures retained.
+HEARTH is a TRL-3 proof of concept using synthetic data and simulated adapters. It is not medical advice, a production clinical system, a HIPAA certification claim, or evidence of caregiver outcomes. The controlled suites pass 40/40 and 60/60; the first locked external-style holdout passes 15/20 with five failures retained, and the separate post-holdout remediation suite passes 5/5.
 
 ## Phase 2 partner requests
 

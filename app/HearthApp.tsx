@@ -1147,7 +1147,7 @@ function EvidenceScreen() {
         <article>
           <p className="eyebrow">Locked holdout</p>
           <h2>Five failures retained</h2>
-          <p>Duplicate-name assignment, ambiguous dates, clinical shorthand, conflicting corrections, and recurring exceptions exposed real gaps. Two safety-taxonomy misses remain Phase 2 release blockers.</p>
+          <p>Duplicate-name assignment, ambiguous dates, clinical shorthand, conflicting corrections, and recurring exceptions exposed real gaps. The original 15/20 score remains locked; a separate remediation suite now verifies all five added controls.</p>
           <span className="flag flag-review">15 / 20 · no reruns</span>
         </article>
         <article>

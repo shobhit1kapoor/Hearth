@@ -14,13 +14,17 @@ export async function sendHearthEmail(input: {
     return { sent: false as const, reason: "email_not_configured" };
   }
   const resend = new Resend(env.RESEND_API_KEY);
-  const { data, error } = await resend.emails.send({
-    from: env.EMAIL_FROM,
-    to: input.to,
-    subject: input.subject,
-    text: input.text,
-    headers: { "X-HEARTH-Message-Type": "care-coordination" },
-  }, { idempotencyKey: input.idempotencyKey });
-  if (error) throw new Error(`Email delivery failed: ${error.message}`);
-  return { sent: true as const, id: data?.id };
+  try {
+    const { data, error } = await resend.emails.send({
+      from: env.EMAIL_FROM,
+      to: input.to,
+      subject: input.subject,
+      text: input.text,
+      headers: { "X-HEARTH-Message-Type": "care-coordination" },
+    }, { idempotencyKey: input.idempotencyKey });
+    if (error) return { sent: false as const, reason: "email_delivery_failed" };
+    return { sent: true as const, id: data?.id };
+  } catch {
+    return { sent: false as const, reason: "email_delivery_failed" };
+  }
 }

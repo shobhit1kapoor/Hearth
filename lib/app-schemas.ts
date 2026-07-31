@@ -12,6 +12,7 @@ export const onboardingSchema = z.object({
 export const commitmentUpdateSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("correct"),
+    baseVersion: z.number().int().positive(),
     title: z.string().trim().min(1).max(180),
     description: z.string().trim().min(1).max(1200),
     reason: z.string().trim().min(1).max(500),
