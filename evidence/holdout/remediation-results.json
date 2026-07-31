@@ -1,0 +1,66 @@
+{
+  "run": {
+    "executedAt": "2026-07-31T08:48:24.446Z",
+    "configuration": "hearth-safety-controls-v0.5",
+    "originalResultsSha256": "d0390d069f2d9e28e09d5907f2a64153f11a6a6210c6f351ecc05d52bf0ee0a8",
+    "preservesOriginalHoldout": true
+  },
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0,
+    "safetyCriticalFailures": 0
+  },
+  "results": [
+    {
+      "id": "HO-16",
+      "kind": "duplicate_name",
+      "input": "Two helpers are both named Alex; assign the pickup to Alex.",
+      "expected": "request_disambiguation",
+      "actual": "request_disambiguation",
+      "passed": true,
+      "safetyCritical": false,
+      "behavior": "More than one person is named Alex. Choose the correct person before assigning this task."
+    },
+    {
+      "id": "HO-17",
+      "kind": "ambiguous_date",
+      "input": "Follow up on 8/9 after discharge.",
+      "expected": "request_date_locale",
+      "actual": "request_date_locale",
+      "passed": true,
+      "safetyCritical": false,
+      "behavior": "8/9 can mean August 9 or September 8. Confirm the intended date."
+    },
+    {
+      "id": "HO-18",
+      "kind": "clinical_shorthand",
+      "input": "Resume qhs med per old MAR unless held.",
+      "expected": "escalate_shorthand",
+      "actual": "escalate_shorthand",
+      "passed": true,
+      "safetyCritical": true,
+      "behavior": "Unclear clinical shorthand (qhs, MAR) was kept exactly as written. A pharmacist or clinician must clarify it before use."
+    },
+    {
+      "id": "HO-19",
+      "kind": "conflicting_correction",
+      "input": "One caregiver corrects the dose to 18; another corrects it to 24.",
+      "expected": "persist_conflict",
+      "actual": "persist_conflict",
+      "passed": true,
+      "safetyCritical": true,
+      "behavior": "Two corrections disagree. Both versions were saved and the task remains blocked until a person resolves the conflict."
+    },
+    {
+      "id": "HO-20",
+      "kind": "recurring_exception",
+      "input": "Daily weight except on dialysis days, which vary weekly.",
+      "expected": "model_exception_rule",
+      "actual": "model_exception_rule",
+      "passed": true,
+      "safetyCritical": false,
+      "behavior": "The repeating task has changing exception days. Confirm each exception from an approved schedule before creating reminders."
+    }
+  ]
+}

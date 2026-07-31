@@ -10,4 +10,8 @@ First and only recorded run: 15 of 20 passed. Five failures were retained; two w
 | HO-19 conflicting corrections | Preserve conflict | Last write wins | Conflicting medication information may disappear | Add conflict-preserving merge state | Not rerun |
 | HO-20 recurring exception | Model exception rule | Daily schedule | Incorrect recurring task plan | Add exception-aware scheduling | Not rerun |
 
-The two safety-critical misses did not execute a clinical action in the harness, but they remain Phase 2 release blockers. The 40/40 and 60/60 controlled results establish deterministic stability only within their locked synthetic scope; they do not prove universal performance.
+The two safety-critical misses did not execute a clinical action in the harness. They were treated as release blockers until terminology-aware escalation and correction-conflict persistence were implemented.
+
+A separate post-holdout remediation suite now passes 5/5, including both safety-critical cases. The original locked 15/20 result and its evidence remain unchanged. The controlled and remediation results establish deterministic stability only within their synthetic scope; they do not prove universal performance.
+
+See `evidence/holdout/remediation-report.md` for the remediation evidence.

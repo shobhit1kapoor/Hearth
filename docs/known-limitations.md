@@ -2,9 +2,9 @@
 
 ## Production connection status
 
-The real caregiver architecture is implemented, but Supabase, NVIDIA, Upstash, Resend, and Sentry are not configured. The migration has not been applied to a live database, and the end-to-end persistence acceptance suite has not been run. Real caregiver mode therefore shows a clear configuration blocker and does not accept patient data.
+Supabase, NVIDIA, Upstash, Resend, and Sentry are configured on the public Vercel deployment. The core and remediation migrations are applied. A disposable two-account live check passes invitation acceptance, task-only disclosure, permission revocation, and membership revocation.
 
-The public Vercel reviewer case remains synthetic. It demonstrates the workflow but does not prove live AI quality, email delivery, cross-account RLS behavior, or production deletion.
+Real patient data is disabled on the public deployment. The broader production-acceptance checklist still requires evidence for upload persistence, email delivery, export, deletion, outage behavior, and external-service observability.
 
 ## Evidence and research
 
@@ -16,22 +16,22 @@ The public Vercel reviewer case remains synthetic. It demonstrates the workflow 
 
 ## Product and AI
 
-- Inputs are seeded structured fixtures; there is no real upload, OCR, transcription, FHIR parsing, or live model extraction.
-- Corrections and demo state are in memory and reset on refresh.
-- Compiler findings are deterministic and case-specific, not general clinical reasoning.
+- Reviewer-mode inputs are seeded synthetic fixtures, while private caregiver mode supports PDF, image, and text uploads with live model extraction. It does not provide FHIR ingestion or transcription.
+- Reviewer-mode state is intentionally resettable. Private caregiver state persists in Supabase.
+- Controlled compiler findings are deterministic and case-specific; live model output remains subject to strict schemas, abstention controls, and human review.
 - H4 urgent redirection is a documented boundary, not a production emergency pathway.
 - The prototype is not for clinical use and cannot establish whether emergency care is or is not needed.
 
 ## Integrations and operations
 
-- Pharmacy, provider, appointment, helper, community-resource, export, and deletion actions are simulations.
+- Pharmacy, provider, appointment, and community-resource acknowledgements remain simulated. Family invitation delivery, persistence, export requests, and deletion requests have real adapters, but the full operational checklist is not yet complete.
 - There is no delivery guarantee, retry queue, reconciliation service, or external acknowledgement.
 - There is no real low-bandwidth text or email channel.
 
 ## Privacy and security
 
-- There is no production authentication, authorization, household isolation, persistence, encryption, audit store, secure deletion, backup, or incident response.
-- Revocation is represented in local interface state only.
+- Production authentication, row-level authorization, household isolation, private storage, persistence, and audit records are implemented. Immediate database-level revocation is covered by the live two-account check.
+- Independent penetration testing, backup-restore testing, incident-response exercises, formal key rotation, and secure-deletion verification remain outstanding.
 - No HIPAA, Section 508, WCAG, FDA, or other certification is claimed.
 
 ## Accessibility

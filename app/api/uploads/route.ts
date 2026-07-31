@@ -13,6 +13,11 @@ import {
 import { limitRequest, requestIdentifier } from "@/lib/server/rate-limit";
 import { apiError } from "@/lib/server/responses";
 import { safeInitialCommitmentState } from "@/lib/safety/lifecycle";
+import {
+  assessClinicalShorthand,
+  modelRecurringSchedule,
+  resolveNumericDate,
+} from "@/lib/safety/interpretation";
 import { requireSameOrigin } from "@/lib/server/csrf";
 
 export const runtime = "nodejs";
@@ -149,31 +154,67 @@ export async function POST(request: Request) {
 
     const { data: insertedCommitments, error: commitmentError } = await supabase
       .from("care_commitments")
-      .insert(result.commitments.map((item) => ({
-        care_space_id: careSpaceId,
-        analysis_run_id: analysisRunId,
-        title: item.title,
-        plain_language_description: item.plainLanguageDescription,
-        category: item.category,
-        state: safeInitialCommitmentState({
-          riskLevel: item.riskLevel,
-          requiresHumanReview: item.requiresHumanReview,
-          possibleConflict: item.possibleConflict,
-          evidenceKind: item.evidenceKind,
-        }),
-        risk_level: item.riskLevel,
-        due_at: item.dueDate ? `${item.dueDate}T12:00:00.000Z` : null,
-        time_window: item.timeWindow,
-        confidence: item.confidence,
-        evidence_kind: item.evidenceKind,
-        possible_conflict: item.possibleConflict,
-        requires_human_review: item.requiresHumanReview,
-        escalation_target: item.recommendedEscalationTarget,
-        required_equipment: item.requiredEquipment,
-        required_skill: item.requiredSkill,
-        dependencies: item.dependencies,
-        completion_evidence_rule: item.completionEvidence,
-      })))
+      .insert(result.commitments.map((item) => {
+        const sourceText = [
+          item.title,
+          item.plainLanguageDescription,
+          item.sourceExcerpt,
+          item.timeWindow ?? "",
+        ].join("\n");
+        const dateReview = resolveNumericDate(sourceText);
+        const shorthandReview = assessClinicalShorthand(sourceText);
+        const scheduleReview = modelRecurringSchedule(sourceText);
+        const dateNeedsReview = dateReview.action === "request_date_locale";
+        const shorthandNeedsReview = shorthandReview.action === "escalate_shorthand";
+        const scheduleNeedsReview = scheduleReview.action === "model_exception_rule"
+          && scheduleReview.schedule.requiresConfirmation;
+        const requiresHumanReview = item.requiresHumanReview
+          || dateNeedsReview
+          || shorthandNeedsReview
+          || scheduleNeedsReview;
+        const reviewMessages = [
+          item.possibleConflict,
+          dateNeedsReview ? dateReview.message : null,
+          shorthandNeedsReview ? shorthandReview.message : null,
+          scheduleNeedsReview ? scheduleReview.message : null,
+        ].filter((value): value is string => Boolean(value));
+        const possibleConflict = reviewMessages.length > 0 ? reviewMessages.join(" ") : null;
+        const evidenceKind = shorthandNeedsReview ? "unknown" : item.evidenceKind;
+        const state = shorthandNeedsReview
+          ? "escalated"
+          : safeInitialCommitmentState({
+            riskLevel: item.riskLevel,
+            requiresHumanReview,
+            possibleConflict,
+            evidenceKind,
+          });
+
+        return {
+          care_space_id: careSpaceId,
+          analysis_run_id: analysisRunId,
+          title: item.title,
+          plain_language_description: item.plainLanguageDescription,
+          category: item.category,
+          state,
+          risk_level: item.riskLevel,
+          due_at: item.dueDate && !dateNeedsReview ? `${item.dueDate}T12:00:00.000Z` : null,
+          time_window: item.timeWindow,
+          confidence: item.confidence,
+          evidence_kind: evidenceKind,
+          possible_conflict: possibleConflict,
+          requires_human_review: requiresHumanReview,
+          escalation_target: shorthandNeedsReview
+            ? item.recommendedEscalationTarget ?? "Pharmacist or clinician"
+            : item.recommendedEscalationTarget,
+          required_equipment: item.requiredEquipment,
+          required_skill: item.requiredSkill,
+          dependencies: item.dependencies,
+          completion_evidence_rule: item.completionEvidence,
+          date_interpretation: dateReview,
+          clinical_shorthand: shorthandReview,
+          schedule_rule: scheduleReview.schedule,
+        };
+      }))
       .select("id");
     if (commitmentError) throw commitmentError;
 

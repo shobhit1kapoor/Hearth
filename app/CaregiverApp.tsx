@@ -43,6 +43,7 @@ type CareSpace = {
 
 type Commitment = {
   id: string;
+  version: number;
   title: string;
   plain_language_description: string;
   category: string;
@@ -74,6 +75,13 @@ type SourceDocument = {
 
 type WorkspaceView = "today" | "inbox" | "plan" | "family" | "settings";
 type AuthMode = "sign_in" | "sign_up" | "recovery";
+type CareSpaceInvitation = {
+  id: string;
+  care_space_id: string;
+  care_space_name: string;
+  role: string;
+  expires_at: string | null;
+};
 
 const copy = {
   en: {
@@ -101,8 +109,9 @@ export default function CaregiverApp({ onTrySample }: { onTrySample: () => void 
   const [readiness, setReadiness] = useState<ServiceReadiness | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [careSpaces, setCareSpaces] = useState<CareSpace[]>([]);
+  const [invitations, setInvitations] = useState<CareSpaceInvitation[]>([]);
   const [activeSpace, setActiveSpace] = useState<CareSpace | null>(null);
-  const [stage, setStage] = useState<"checking" | "auth" | "onboarding" | "workspace">(supabase ? "checking" : "auth");
+  const [stage, setStage] = useState<"checking" | "auth" | "invitation" | "onboarding" | "workspace">(supabase ? "checking" : "auth");
   const [authMode, setAuthMode] = useState<AuthMode>("sign_in");
   const [notice, setNotice] = useState("");
 
@@ -115,7 +124,12 @@ export default function CaregiverApp({ onTrySample }: { onTrySample: () => void 
     const payload = await response.json() as { careSpaces: CareSpace[] };
     setCareSpaces(payload.careSpaces);
     if (payload.careSpaces.length === 0) {
-      setStage("onboarding");
+      const invitationResponse = await fetch("/api/family/invitations", { cache: "no-store" });
+      const invitationPayload = invitationResponse.ok
+        ? await invitationResponse.json() as { invitations: CareSpaceInvitation[] }
+        : { invitations: [] };
+      setInvitations(invitationPayload.invitations);
+      setStage(invitationPayload.invitations.length > 0 ? "invitation" : "onboarding");
     } else {
       setActiveSpace(payload.careSpaces[0]);
       setStage("workspace");
@@ -186,6 +200,18 @@ export default function CaregiverApp({ onTrySample }: { onTrySample: () => void 
     );
   }
 
+  if (stage === "invitation" && user && invitations.length > 0) {
+    return (
+      <InvitationScreen
+        invitation={invitations[0]}
+        email={user.email ?? ""}
+        onSignOut={async () => { await supabase?.auth.signOut(); }}
+        onAccepted={loadCareSpaces}
+        onCreateOwnSpace={() => setStage("onboarding")}
+      />
+    );
+  }
+
   if (stage === "workspace" && user && activeSpace) {
     return (
       <CaregiverWorkspace
@@ -200,6 +226,59 @@ export default function CaregiverApp({ onTrySample }: { onTrySample: () => void 
   }
 
   return <div className="care-loading"><strong>HEARTH could not open this care space.</strong></div>;
+}
+
+function InvitationScreen({
+  invitation,
+  email,
+  onSignOut,
+  onAccepted,
+  onCreateOwnSpace,
+}: {
+  invitation: CareSpaceInvitation;
+  email: string;
+  onSignOut: () => void;
+  onAccepted: () => Promise<void>;
+  onCreateOwnSpace: () => void;
+}) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+
+  async function accept() {
+    setPending(true);
+    setError("");
+    const response = await fetch("/api/family/invitations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ invitationId: invitation.id }),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      setError(payload.error ?? "HEARTH could not accept this invitation.");
+      setPending(false);
+      return;
+    }
+    await onAccepted();
+  }
+
+  return (
+    <main className="onboarding-main">
+      <section className="onboarding-card">
+        <div className="onboarding-top">
+          <div className="entry-brand">HEARTH</div>
+          <button className="text-button" onClick={onSignOut}><LogOut size={18} /> Sign out</button>
+        </div>
+        <p className="eyebrow">Family invitation</p>
+        <h1>Help with {invitation.care_space_name}?</h1>
+        <p>This invitation was sent to {email}. Accept it to see only the care information shared with you.</p>
+        {error && <p className="form-error" role="alert">{error}</p>}
+        <button className="primary-button" onClick={accept} disabled={pending}>
+          {pending ? "Accepting…" : "Accept invitation"}
+        </button>
+        <button className="secondary-button" onClick={onCreateOwnSpace} disabled={pending}>Create my own care space</button>
+      </section>
+    </main>
+  );
 }
 
 function AuthScreen({
@@ -670,7 +749,7 @@ function PlanView({
                 </dl>
               </details>
               {editing === item.id ? (
-                <CorrectionForm item={item} onCancel={() => setEditing(null)} onSave={(title, description, reason) => update(item.id, { action: "correct", title, description, reason })} />
+                <CorrectionForm item={item} onCancel={() => setEditing(null)} onSave={(title, description, reason) => update(item.id, { action: "correct", baseVersion: item.version, title, description, reason })} />
               ) : (
                 <div className="commitment-actions">
                   {["identified", "needs_review"].includes(item.state) && <button className="primary-button" onClick={() => update(item.id, { action: "confirm" })}>{item.requires_human_review && ["high", "critical"].includes(item.risk_level) ? "Send for professional review" : "Confirm this task"}</button>}

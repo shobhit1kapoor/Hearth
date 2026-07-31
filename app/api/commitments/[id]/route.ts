@@ -2,6 +2,7 @@ import { commitmentUpdateSchema } from "@/lib/app-schemas";
 import { requireCareSpaceMember } from "@/lib/server/auth";
 import { apiError } from "@/lib/server/responses";
 import { requireTransition, type PersistentCommitmentState } from "@/lib/safety/lifecycle";
+import { reconcileCorrections } from "@/lib/safety/interpretation";
 import { requireSameOrigin } from "@/lib/server/csrf";
 
 export const runtime = "nodejs";
@@ -21,6 +22,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       .eq("care_space_id", careSpaceId)
       .single();
     if (readError || !current) throw readError ?? new Error("Task not found.");
+
+    if (input.action === "correct" && current.version !== input.baseVersion) {
+      return recordCorrectionConflict({
+        supabase,
+        careSpaceId,
+        commitmentId: id,
+        userId: user.id,
+        current,
+        proposal: input,
+      });
+    }
 
     const update: Record<string, unknown> = { version: current.version + 1 };
     let nextState = current.state as PersistentCommitmentState;
@@ -68,8 +80,27 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
 
     update.state = nextState;
-    const { data, error } = await supabase.from("care_commitments").update(update).eq("id", id).select().single();
+    let updateQuery = supabase.from("care_commitments").update(update).eq("id", id);
+    if (input.action === "correct") updateQuery = updateQuery.eq("version", input.baseVersion);
+    const { data, error } = await updateQuery.select().maybeSingle();
     if (error) throw error;
+    if (!data && input.action === "correct") {
+      const { data: latest, error: latestError } = await supabase
+        .from("care_commitments")
+        .select("*")
+        .eq("id", id)
+        .eq("care_space_id", careSpaceId)
+        .single();
+      if (latestError || !latest) throw latestError ?? new Error("Task not found.");
+      return recordCorrectionConflict({
+        supabase,
+        careSpaceId,
+        commitmentId: id,
+        userId: user.id,
+        current: latest,
+        proposal: input,
+      });
+    }
     const { error: eventError } = await supabase.from("commitment_events").insert({
       care_space_id: careSpaceId,
       commitment_id: id,
@@ -84,4 +115,96 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   } catch (error) {
     return apiError(error, "commitment_update");
   }
+}
+
+async function recordCorrectionConflict(input: {
+  supabase: Awaited<ReturnType<typeof requireCareSpaceMember>>["supabase"];
+  careSpaceId: string;
+  commitmentId: string;
+  userId: string;
+  current: Record<string, unknown>;
+  proposal: {
+    baseVersion: number;
+    title: string;
+    description: string;
+    reason: string;
+  };
+}) {
+  const existingValue = {
+    title: String(input.current.title ?? ""),
+    description: String(input.current.plain_language_description ?? ""),
+  };
+  const proposedValue = {
+    title: input.proposal.title,
+    description: input.proposal.description,
+  };
+  const resolution = reconcileCorrections([
+    {
+      actorId: String(input.current.approved_by ?? "existing-version"),
+      baseVersion: input.proposal.baseVersion,
+      value: JSON.stringify(existingValue),
+      reason: "Current saved version",
+    },
+    {
+      actorId: input.userId,
+      baseVersion: input.proposal.baseVersion,
+      value: JSON.stringify(proposedValue),
+      reason: input.proposal.reason,
+    },
+  ]);
+  const observedVersion = Number(input.current.version ?? input.proposal.baseVersion + 1);
+  const { data: conflict, error: conflictError } = await input.supabase
+    .from("commitment_correction_conflicts")
+    .insert({
+      care_space_id: input.careSpaceId,
+      commitment_id: input.commitmentId,
+      proposed_by: input.userId,
+      base_version: input.proposal.baseVersion,
+      observed_version: observedVersion,
+      existing_value: existingValue,
+      proposed_value: proposedValue,
+      reason: input.proposal.reason,
+      status: "unresolved",
+    })
+    .select("id")
+    .single();
+  if (conflictError || !conflict) throw conflictError ?? new Error("The correction conflict could not be saved.");
+
+  const ended = ["cancelled", "superseded"].includes(String(input.current.state));
+  const nextState = ended ? String(input.current.state) : "blocked";
+  const { data: blockedCommitment, error: blockError } = await input.supabase
+    .from("care_commitments")
+    .update({
+      state: nextState,
+      version: observedVersion + 1,
+      requires_human_review: true,
+      possible_conflict: resolution.message,
+    })
+    .eq("id", input.commitmentId)
+    .eq("care_space_id", input.careSpaceId)
+    .eq("version", observedVersion)
+    .select("id")
+    .maybeSingle();
+  if (blockError || !blockedCommitment) {
+    throw blockError ?? new Error("The task changed again. The conflicting correction was saved; reload before continuing.");
+  }
+  const { error: eventError } = await input.supabase.from("commitment_events").insert({
+    care_space_id: input.careSpaceId,
+    commitment_id: input.commitmentId,
+    actor_id: input.userId,
+    from_state: input.current.state,
+    to_state: nextState,
+    reason: "Conflicting correction preserved for review",
+    evidence: {
+      baseVersion: input.proposal.baseVersion,
+      observedVersion,
+      conflictId: conflict.id,
+    },
+  });
+  if (eventError) throw eventError;
+
+  return Response.json({
+    error: "Someone changed this task while you were reviewing it. Both versions were saved. Review the conflict before continuing.",
+    code: "CORRECTION_CONFLICT",
+  }, { status: 409 });
 }

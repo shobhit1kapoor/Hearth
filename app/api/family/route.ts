@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getServerEnvironment } from "@/lib/config/env";
 import { requireCareSpaceMember } from "@/lib/server/auth";
 import { sendHearthEmail } from "@/lib/server/email";
 import { limitRequest, requestIdentifier } from "@/lib/server/rate-limit";
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
     const email = rate.success ? await sendHearthEmail({
       to: input.email,
       subject: "You have a HEARTH care task invitation",
-      text: "A family caregiver invited you to help with a specific care task in HEARTH. Sign in using this email address to review only the information shared for that task.",
+      text: `A family caregiver invited you to help with a specific care task in HEARTH. Sign in at ${getServerEnvironment().NEXT_PUBLIC_APP_URL} using this email address, then choose Accept invitation. You will only see the information shared for that task.`,
       idempotencyKey: `family-invite-${member.id}`,
     }) : { sent: false as const, reason: "rate_limited" };
     await supabase.from("permission_events").insert({
