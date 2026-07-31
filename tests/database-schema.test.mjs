@@ -8,6 +8,8 @@ const remediationMigrationUrl = new URL("../supabase/migrations/202607310001_hol
 const remediationSql = await readFile(remediationMigrationUrl, "utf8");
 const rateLimitMigrationUrl = new URL("../supabase/migrations/202607310002_service_rate_limits.sql", import.meta.url);
 const rateLimitSql = await readFile(rateLimitMigrationUrl, "utf8");
+const accessMigrationUrl = new URL("../supabase/migrations/202607310003_launch_access_hardening.sql", import.meta.url);
+const accessSql = await readFile(accessMigrationUrl, "utf8");
 
 const requiredTables = [
   "profiles", "care_spaces", "care_space_members", "care_recipients",
@@ -76,4 +78,18 @@ test("production rate limiting has an atomic database fallback restricted to the
   assert.match(rateLimitSql, /on conflict \(limit_key\) do update/i);
   assert.match(rateLimitSql, /revoke all on function public\.check_service_rate_limit[\s\S]+from authenticated/i);
   assert.match(rateLimitSql, /grant execute on function public\.check_service_rate_limit[\s\S]+to service_role/i);
+});
+
+test("launch access policies limit helpers to their assigned tasks", () => {
+  assert.match(accessSql, /create or replace function public\.can_access_assigned_commitment/i);
+  assert.match(accessSql, /member\.id = assigned_member_id/i);
+  assert.match(accessSql, /create policy "commitments read assigned"/i);
+  assert.match(accessSql, /create policy "commitments update assigned"/i);
+  assert.match(accessSql, /create policy "members read self or admins"/i);
+  assert.match(accessSql, /create policy "permissions read own or admins"/i);
+  assert.match(accessSql, /create policy "analysis read admins"/i);
+  assert.match(accessSql, /member\.revoked_at is null/i);
+  assert.match(accessSql, /create or replace function public\.guard_commitment_update/i);
+  assert.match(accessSql, /helpers may only update task progress and completion evidence/i);
+  assert.match(accessSql, /invalid helper task transition/i);
 });

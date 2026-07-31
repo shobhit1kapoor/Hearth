@@ -39,6 +39,7 @@ type CareSpace = {
   name: string;
   mode: string;
   care_recipients: Array<{ id: string; preferred_name: string; preferred_language: string }>;
+  membership: { id: string; role: string } | null;
 };
 
 type Commitment = {
@@ -55,6 +56,7 @@ type Commitment = {
   requires_human_review: boolean;
   escalation_target: string | null;
   completion_evidence_rule: string;
+  owner_member_id: string | null;
   commitment_sources: Array<{
     id: string;
     source_excerpt: string;
@@ -481,6 +483,7 @@ function CaregiverWorkspace({
   onSignOut: () => void;
 }) {
   const recipient = careSpace.care_recipients[0];
+  const isManager = ["primary_caregiver", "care_recipient", "administrator"].includes(careSpace.membership?.role ?? "");
   const [language, setLanguage] = useState<"en" | "es">((recipient?.preferred_language === "es" ? "es" : "en"));
   const [view, setView] = useState<WorkspaceView>("today");
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -515,9 +518,9 @@ function CaregiverWorkspace({
 
   const nav: Array<{ id: WorkspaceView; label: string; icon: typeof Inbox }> = [
     { id: "today", label: text.today, icon: HeartHandshake },
-    { id: "inbox", label: text.inbox, icon: Inbox },
+    ...(isManager ? [{ id: "inbox" as const, label: text.inbox, icon: Inbox }] : []),
     { id: "plan", label: text.plan, icon: ListChecks },
-    { id: "family", label: text.family, icon: Users },
+    ...(isManager ? [{ id: "family" as const, label: text.family, icon: Users }] : []),
     { id: "settings", label: text.settings, icon: Settings },
   ];
 
@@ -552,11 +555,11 @@ function CaregiverWorkspace({
           </div>
         </header>
         <main id="care-main" tabIndex={-1} className="care-workspace">
-          {view === "today" && <TodayView nextTask={nextTask} commitments={commitments} onOpenTask={() => goTo("plan")} onAddInformation={() => goTo("inbox")} text={text} />}
-          {view === "inbox" && <InboxView careSpaceId={careSpace.id} documents={documents} readiness={readiness} onChanged={refresh} />}
-          {view === "plan" && <PlanView careSpaceId={careSpace.id} commitments={commitments} language={language} onChanged={refresh} />}
-          {view === "family" && <FamilyView careSpaceId={careSpace.id} />}
-          {view === "settings" && <SettingsView careSpaceId={careSpace.id} userEmail={user.email ?? ""} onDeleted={onSignOut} />}
+          {view === "today" && <TodayView nextTask={nextTask} commitments={commitments} onOpenTask={() => goTo("plan")} onAddInformation={isManager ? () => goTo("inbox") : undefined} text={text} />}
+          {view === "inbox" && isManager && <InboxView careSpaceId={careSpace.id} documents={documents} readiness={readiness} onChanged={refresh} />}
+          {view === "plan" && <PlanView careSpaceId={careSpace.id} commitments={commitments} language={language} membership={careSpace.membership} isManager={isManager} onChanged={refresh} />}
+          {view === "family" && isManager && <FamilyView careSpaceId={careSpace.id} />}
+          {view === "settings" && <SettingsView careSpaceId={careSpace.id} userEmail={user.email ?? ""} canManageSpace={isManager} onDeleted={onSignOut} />}
         </main>
       </div>
       <nav className="real-mobile-nav" aria-label="Quick navigation">
@@ -579,7 +582,7 @@ function TodayView({
   nextTask?: Commitment;
   commitments: Commitment[];
   onOpenTask: () => void;
-  onAddInformation: () => void;
+  onAddInformation?: () => void;
   text: typeof copy.en;
 }) {
   const complete = commitments.filter((item) => item.state === "verified").length;
@@ -595,7 +598,7 @@ function TodayView({
           <button className="primary-button" onClick={onOpenTask}>Review this task <ChevronRight size={19} /></button>
         </section>
       ) : (
-        <section className="empty-care-state"><Check aria-hidden="true" /><h2>{commitments.length ? "Everything has a clear path." : text.noTasks}</h2><p>{commitments.length ? `${complete} tasks are verified.` : "Add a note or document to begin."}</p><button className="primary-button" onClick={onAddInformation}>Add care information</button></section>
+        <section className="empty-care-state"><Check aria-hidden="true" /><h2>{commitments.length ? "Everything has a clear path." : text.noTasks}</h2><p>{commitments.length ? `${complete} tasks are verified.` : onAddInformation ? "Add a note or document to begin." : "There are no tasks assigned to you."}</p>{onAddInformation && <button className="primary-button" onClick={onAddInformation}>Add care information</button>}</section>
       )}
       <div className="real-summary-grid">
         <article><strong>{commitments.filter((item) => item.state === "needs_review").length}</strong><span>need a quick review</span></article>
@@ -686,15 +689,34 @@ function PlanView({
   careSpaceId,
   commitments,
   language,
+  membership,
+  isManager,
   onChanged,
 }: {
   careSpaceId: string;
   commitments: Commitment[];
   language: "en" | "es";
+  membership: CareSpace["membership"];
+  isManager: boolean;
   onChanged: () => void;
 }) {
   const [message, setMessage] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
+  const [helpers, setHelpers] = useState<Array<{ id: string; display_name: string | null; invited_email: string | null; status: string }>>([]);
+  const [selectedHelpers, setSelectedHelpers] = useState<Record<string, string>>({});
+  const [completionNotes, setCompletionNotes] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!isManager) return;
+    let active = true;
+    fetch(`/api/family?careSpaceId=${careSpaceId}`, { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : { members: [] })
+      .then((payload) => {
+        if (!active) return;
+        setHelpers((payload.members ?? []).filter((member: { role: string; status: string }) => member.role === "family_helper" && ["invited", "active"].includes(member.status)));
+      });
+    return () => { active = false; };
+  }, [careSpaceId, isManager]);
 
   async function update(id: string, body: Record<string, unknown>) {
     const response = await fetch(`/api/commitments/${id}?careSpaceId=${careSpaceId}`, {
@@ -752,9 +774,14 @@ function PlanView({
                 <CorrectionForm item={item} onCancel={() => setEditing(null)} onSave={(title, description, reason) => update(item.id, { action: "correct", baseVersion: item.version, title, description, reason })} />
               ) : (
                 <div className="commitment-actions">
-                  {["identified", "needs_review"].includes(item.state) && <button className="primary-button" onClick={() => update(item.id, { action: "confirm" })}>{item.requires_human_review && ["high", "critical"].includes(item.risk_level) ? "Send for professional review" : "Confirm this task"}</button>}
-                  <button className="secondary-button" onClick={() => setEditing(item.id)}>Correct</button>
-                  {["identified", "needs_review"].includes(item.state) && <button className="text-button danger-text" onClick={() => update(item.id, { action: "reject", reason: "Caregiver rejected this extracted task." })}>Reject</button>}
+                  {isManager && ["identified", "needs_review"].includes(item.state) && <button className="primary-button" onClick={() => update(item.id, { action: "confirm" })}>{item.requires_human_review && ["high", "critical"].includes(item.risk_level) ? "Send for professional review" : "Confirm this task"}</button>}
+                  {isManager && item.state === "assigned" && helpers.length > 0 && <div className="task-handoff"><label>Choose a helper<select value={selectedHelpers[item.id] ?? ""} onChange={(event) => setSelectedHelpers({ ...selectedHelpers, [item.id]: event.target.value })}><option value="">Select a helper</option>{helpers.map((helper) => <option key={helper.id} value={helper.id}>{helper.display_name ?? helper.invited_email ?? "Family helper"}{helper.status === "invited" ? " · invitation pending" : ""}</option>)}</select></label><button className="primary-button" disabled={!selectedHelpers[item.id]} onClick={() => update(item.id, { action: "assign", memberId: selectedHelpers[item.id] })}>Assign task</button></div>}
+                  {!isManager && item.state === "awaiting_acceptance" && item.owner_member_id === membership?.id && <button className="primary-button" onClick={() => update(item.id, { action: "accept" })}>Accept this task</button>}
+                  {item.state === "accepted" && (isManager || item.owner_member_id === membership?.id) && <button className="primary-button" onClick={() => update(item.id, { action: "start" })}>Start this task</button>}
+                  {item.state === "in_progress" && (isManager || item.owner_member_id === membership?.id) && <div className="task-completion"><label>What was completed?<textarea value={completionNotes[item.id] ?? ""} onChange={(event) => setCompletionNotes({ ...completionNotes, [item.id]: event.target.value })} placeholder={item.completion_evidence_rule} /></label><button className="primary-button" disabled={!completionNotes[item.id]?.trim()} onClick={() => update(item.id, { action: "complete", completionEvidence: completionNotes[item.id] })}>Mark complete</button></div>}
+                  {isManager && item.state === "completed" && <button className="primary-button" onClick={() => update(item.id, { action: "verify", completionEvidence: "Caregiver reviewed the recorded completion." })}>Verify completion</button>}
+                  {isManager && <button className="secondary-button" onClick={() => setEditing(item.id)}>Correct</button>}
+                  {isManager && ["identified", "needs_review"].includes(item.state) && <button className="text-button danger-text" onClick={() => update(item.id, { action: "reject", reason: "Caregiver rejected this extracted task." })}>Reject</button>}
                   <button className="text-button" onClick={() => translate(item)}><Languages size={18} /> Translate</button>
                 </div>
               )}
@@ -776,7 +803,7 @@ function CorrectionForm({ item, onCancel, onSave }: { item: Commitment; onCancel
 function FamilyView({ careSpaceId }: { careSpaceId: string }) {
   const [members, setMembers] = useState<Array<Record<string, unknown>>>([]);
   const [message, setMessage] = useState("");
-  const [form, setForm] = useState({ email: "", purpose: "Transportation help", canView: true, canEdit: false, canReceiveAlerts: true, canAccessDocuments: false, canContactProfessionals: false });
+  const [form, setForm] = useState({ name: "", email: "", purpose: "Transportation help", canView: true, canEdit: true, canReceiveAlerts: true, canAccessDocuments: false, canContactProfessionals: false });
 
   const load = useCallback(async () => {
     const response = await fetch(`/api/family?careSpaceId=${careSpaceId}`, { cache: "no-store" });
@@ -806,7 +833,7 @@ function FamilyView({ careSpaceId }: { careSpaceId: string }) {
     const payload = await response.json();
     setMessage(response.ok ? "Invitation and task-specific access saved." : payload.error);
     if (response.ok) {
-      setForm({ ...form, email: "" });
+      setForm({ ...form, name: "", email: "" });
       void load();
     }
   }
@@ -827,6 +854,7 @@ function FamilyView({ careSpaceId }: { careSpaceId: string }) {
       <header className="real-screen-header"><p className="eyebrow">Family help</p><h1>Share the task, not the whole record.</h1><p>Choose exactly what each helper may see or do.</p></header>
       <form className="invite-card care-form" onSubmit={invite}>
         <div><UserPlus /><div><h2>Invite a family helper</h2><p>They must accept before a task is handed over.</p></div></div>
+        <label>Name<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required /></label>
         <label>Email<input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} required /></label>
         <label>Purpose<input value={form.purpose} onChange={(event) => setForm({ ...form, purpose: event.target.value })} required /></label>
         <div className="permission-checks">
@@ -842,14 +870,15 @@ function FamilyView({ careSpaceId }: { careSpaceId: string }) {
         <div className="real-section-title"><h2>Care-space members</h2><span>{members.length}</span></div>
         {members.map((member) => {
           const permissions = (member.permissions as Array<Record<string, unknown>> | undefined) ?? [];
-          return <article className="member-row" key={String(member.id)}><div className="member-avatar">{String(member.invited_email ?? member.role ?? "M").slice(0, 1).toUpperCase()}</div><div><strong>{String(member.invited_email ?? member.role)}</strong><span>{String(member.role).replaceAll("_", " ")} · {String(member.status)}</span><small>{permissions[0] ? `Purpose: ${permissions[0].purpose}` : "Full caregiver access"}</small></div>{permissions[0] && !permissions[0].revoked_at && <button className="secondary-button" onClick={() => revoke(String(permissions[0].id))}>Revoke access</button>}</article>;
+          const memberName = String(member.display_name ?? member.invited_email ?? member.role ?? "Member");
+          return <article className="member-row" key={String(member.id)}><div className="member-avatar">{memberName.slice(0, 1).toUpperCase()}</div><div><strong>{memberName}</strong><span>{String(member.role).replaceAll("_", " ")} · {String(member.status)}</span><small>{permissions[0] ? `Purpose: ${permissions[0].purpose}` : "Full caregiver access"}</small></div>{permissions[0] && !permissions[0].revoked_at && <button className="secondary-button" onClick={() => revoke(String(permissions[0].id))}>Revoke access</button>}</article>;
         })}
       </section>
     </>
   );
 }
 
-function SettingsView({ careSpaceId, userEmail, onDeleted }: { careSpaceId: string; userEmail: string; onDeleted: () => void }) {
+function SettingsView({ careSpaceId, userEmail, canManageSpace, onDeleted }: { careSpaceId: string; userEmail: string; canManageSpace: boolean; onDeleted: () => void }) {
   const [message, setMessage] = useState("");
   const [deleteText, setDeleteText] = useState("");
   const [settings, setSettings] = useState({
@@ -947,15 +976,15 @@ function SettingsView({ careSpaceId, userEmail, onDeleted }: { careSpaceId: stri
       </section>
       <button className="primary-button settings-save" onClick={saveSettings}>Save notification settings</button>
       {message && <p className="workspace-notice" role="status">{message}</p>}
-      <section className="data-control-card">
+      {canManageSpace && <section className="data-control-card">
         <div><Download /><div><h2>Export your information</h2><p>Download the care plan, permissions, activity history, and settings as JSON.</p></div></div>
         <button className="secondary-button" onClick={exportData}>Download export</button>
-      </section>
-      <section className="data-control-card deletion-control">
+      </section>}
+      {canManageSpace && <section className="data-control-card deletion-control">
         <div><ShieldCheck /><div><h2>Delete this care space</h2><p>This removes files and active care data. A minimal deletion record is kept.</p></div></div>
         <label>Type DELETE to confirm<input value={deleteText} onChange={(event) => setDeleteText(event.target.value)} /></label>
         <button className="secondary-button danger-button" disabled={deleteText !== "DELETE"} onClick={deleteSpace}>Delete care space</button>
-      </section>
+      </section>}
     </>
   );
 }

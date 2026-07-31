@@ -14,7 +14,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     const careSpaceId = new URL(request.url).searchParams.get("careSpaceId");
     if (!careSpaceId) return Response.json({ error: "careSpaceId is required." }, { status: 400 });
     const input = commitmentUpdateSchema.parse(await request.json());
-    const { user, supabase } = await requireCareSpaceMember(careSpaceId);
+    const { user, supabase, membership } = await requireCareSpaceMember(careSpaceId);
     const { data: current, error: readError } = await supabase
       .from("care_commitments")
       .select("*")
@@ -22,6 +22,18 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       .eq("care_space_id", careSpaceId)
       .single();
     if (readError || !current) throw readError ?? new Error("Task not found.");
+
+    const isManager = ["primary_caregiver", "care_recipient", "administrator"].includes(membership.role);
+    const isAssignedOwner = current.owner_member_id === membership.id;
+    if (["correct", "reject", "confirm", "assign", "verify"].includes(input.action) && !isManager) {
+      return Response.json({ error: "Only the care-space owner can make this change." }, { status: 403 });
+    }
+    if (input.action === "accept" && !isAssignedOwner) {
+      return Response.json({ error: "Only the assigned helper can accept this task." }, { status: 403 });
+    }
+    if (["start", "complete"].includes(input.action) && !isManager && !isAssignedOwner) {
+      return Response.json({ error: "This task is assigned to someone else." }, { status: 403 });
+    }
 
     if (input.action === "correct" && current.version !== input.baseVersion) {
       return recordCorrectionConflict({
@@ -58,6 +70,18 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       update.approved_at = new Date().toISOString();
       evidence = input.completionEvidence;
     } else if (input.action === "assign") {
+      const { data: assignedMember, error: assignedMemberError } = await supabase
+        .from("care_space_members")
+        .select("id")
+        .eq("id", input.memberId)
+        .eq("care_space_id", careSpaceId)
+        .in("status", ["invited", "active"])
+        .is("revoked_at", null)
+        .maybeSingle();
+      if (assignedMemberError) throw assignedMemberError;
+      if (!assignedMember) {
+        return Response.json({ error: "Choose an available helper from this care space." }, { status: 400 });
+      }
       nextState = "awaiting_acceptance";
       requireTransition(current.state, nextState);
       update.owner_member_id = input.memberId;
