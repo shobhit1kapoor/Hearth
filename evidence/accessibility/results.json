@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-07-31T16:19:59.083Z",
+  "auditedAt": "2026-07-31T16:34:20.968Z",
   "baseUrl": "https://hearth-care-five.vercel.app",
   "tool": "Playwright + axe-core",
   "axe": {
@@ -8,7 +8,7 @@
         "label": "Caregiver entry",
         "url": "https://hearth-care-five.vercel.app/",
         "violations": [],
-        "passes": 20,
+        "passes": 18,
         "incomplete": 1
       },
       {
