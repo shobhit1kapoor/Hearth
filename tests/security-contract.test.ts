@@ -72,6 +72,11 @@ test("family member and permission listings are restricted to care-space manager
   assert.match(source, /display_name/);
 });
 
+test("validated sample waits for a helper selection before acceptance", async () => {
+  const source = await read("../app/api/demo/load/route.ts");
+  assert.match(source, /"Awaiting acceptance": "assigned"/);
+});
+
 test("rate limiting prefers the atomic database limiter and keeps safe fallbacks", async () => {
   const source = await read("../lib/server/rate-limit.ts");
   assert.match(source, /createSupabaseAdminClient/);
