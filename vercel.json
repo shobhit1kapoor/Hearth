@@ -6,10 +6,10 @@
   "regions": ["iad1"],
   "functions": {
     "app/api/uploads/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 180
     },
     "app/api/translations/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 180
     }
   }
 }

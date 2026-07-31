@@ -43,6 +43,19 @@ test("upload analysis applies ambiguity, shorthand, and recurring-exception cont
   assert.match(source, /state = shorthandNeedsReview[\s\S]*"escalated"/);
 });
 
+test("AI routes allow enough time for production document processing", async () => {
+  const uploadRoute = await read("../app/api/uploads/route.ts");
+  const translationRoute = await read("../app/api/translations/route.ts");
+  const vercel = JSON.parse(await read("../vercel.json")) as {
+    functions: Record<string, { maxDuration: number }>;
+  };
+
+  assert.match(uploadRoute, /maxDuration = 180/);
+  assert.match(translationRoute, /maxDuration = 180/);
+  assert.equal(vercel.functions["app/api/uploads/route.ts"].maxDuration, 180);
+  assert.equal(vercel.functions["app/api/translations/route.ts"].maxDuration, 180);
+});
+
 test("corrections use optimistic concurrency and persist disagreements", async () => {
   const source = await read("../app/api/commitments/[id]/route.ts");
   assert.match(source, /current\.version !== input\.baseVersion/);

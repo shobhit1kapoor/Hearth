@@ -21,7 +21,8 @@ import {
 import { requireSameOrigin } from "@/lib/server/csrf";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// NVIDIA can need more than a minute for long discharge documents.
+export const maxDuration = 180;
 
 export async function POST(request: Request) {
   let analysisRunId: string | undefined;
