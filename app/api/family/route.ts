@@ -10,6 +10,7 @@ export const runtime = "nodejs";
 
 const inviteSchema = z.object({
   careSpaceId: z.string().uuid(),
+  name: z.string().trim().min(1).max(120).optional(),
   email: z.string().email(),
   purpose: z.string().trim().min(1).max(160),
   canView: z.boolean(),
@@ -36,10 +37,13 @@ export async function GET(request: Request) {
   try {
     const careSpaceId = new URL(request.url).searchParams.get("careSpaceId");
     if (!careSpaceId) return Response.json({ error: "careSpaceId is required." }, { status: 400 });
-    const { supabase } = await requireCareSpaceMember(careSpaceId);
+    const { supabase, membership } = await requireCareSpaceMember(careSpaceId);
+    if (!["primary_caregiver", "care_recipient", "administrator"].includes(membership.role)) {
+      return Response.json({ error: "Only a care-space owner can view family access." }, { status: 403 });
+    }
     const { data, error } = await supabase
       .from("care_space_members")
-      .select("id, user_id, invited_email, role, status, expires_at, permissions(*)")
+      .select("id, user_id, display_name, invited_email, role, status, expires_at, permissions(*)")
       .eq("care_space_id", careSpaceId)
       .order("created_at");
     if (error) throw error;
@@ -59,6 +63,7 @@ export async function POST(request: Request) {
     }
     const { data: member, error: memberError } = await supabase.from("care_space_members").insert({
       care_space_id: input.careSpaceId,
+      display_name: input.name ?? input.email.split("@")[0],
       invited_email: input.email.toLowerCase(),
       role: "family_helper",
       status: "invited",

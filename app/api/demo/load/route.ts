@@ -11,7 +11,9 @@ const stateMap: Record<string, string> = {
   Identified: "identified",
   "Needs review": "needs_review",
   Assigned: "assigned",
-  "Awaiting acceptance": "awaiting_acceptance",
+  // A reusable sample has no household-specific helper yet. The caregiver
+  // chooses one before the task can enter awaiting_acceptance.
+  "Awaiting acceptance": "assigned",
   Accepted: "accepted",
   "In progress": "in_progress",
   "Awaiting external response": "awaiting_external_response",

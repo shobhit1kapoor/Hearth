@@ -98,6 +98,7 @@ try {
       title: "Synthetic ride check",
       plain_language_description: "Confirm a synthetic ride.",
       category: "transportation",
+      owner_member_id: invitation.id,
       evidence_kind: "verified_source_fact",
       requires_human_review: false,
       completion_evidence_rule: "Record synthetic confirmation.",

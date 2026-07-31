@@ -7,14 +7,26 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const { supabase } = await requireUser();
+    const { user, supabase } = await requireUser();
     const { data, error } = await supabase
       .from("care_spaces")
       .select("id, name, mode, created_at, care_recipients(id, preferred_name, preferred_language)")
       .is("deleted_at", null)
       .order("created_at", { ascending: true });
     if (error) throw error;
-    return Response.json({ careSpaces: data });
+    const ids = (data ?? []).map((space) => space.id);
+    const { data: memberships, error: membershipError } = ids.length === 0
+      ? { data: [], error: null }
+      : await supabase.from("care_space_members")
+        .select("id, care_space_id, role")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .in("care_space_id", ids);
+    if (membershipError) throw membershipError;
+    const bySpace = new Map((memberships ?? []).map((member) => [member.care_space_id, member]));
+    return Response.json({
+      careSpaces: (data ?? []).map((space) => ({ ...space, membership: bySpace.get(space.id) ?? null })),
+    });
   } catch (error) {
     return apiError(error, "care_spaces_list");
   }

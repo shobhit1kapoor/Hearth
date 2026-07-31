@@ -4340,6 +4340,46 @@ main {
   margin-top: 18px;
 }
 
+.task-handoff,
+.task-completion {
+  display: grid;
+  width: min(100%, 520px);
+  gap: 10px;
+  border-radius: 12px;
+  background: var(--paper-deep);
+  padding: 16px;
+}
+
+.task-handoff label,
+.task-completion label {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.task-handoff select,
+.task-completion textarea {
+  min-height: 48px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+  padding: 11px 12px;
+}
+
+.task-completion textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.task-handoff .primary-button,
+.task-completion .primary-button {
+  width: fit-content;
+}
+
 .danger-text {
   color: #8e3027;
 }

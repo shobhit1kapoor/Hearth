@@ -59,6 +59,24 @@ test("family invitations require sign-in, same-origin acceptance, and a database
   assert.match(source, /accept_care_space_invitation/);
 });
 
+test("task actions enforce manager and assigned-helper ownership", async () => {
+  const source = await read("../app/api/commitments/[id]/route.ts");
+  assert.match(source, /isAssignedOwner/);
+  assert.match(source, /Only the assigned helper can accept this task/);
+  assert.match(source, /Only the care-space owner can make this change/);
+});
+
+test("family member and permission listings are restricted to care-space managers", async () => {
+  const source = await read("../app/api/family/route.ts");
+  assert.match(source, /Only a care-space owner can view family access/);
+  assert.match(source, /display_name/);
+});
+
+test("validated sample waits for a helper selection before acceptance", async () => {
+  const source = await read("../app/api/demo/load/route.ts");
+  assert.match(source, /"Awaiting acceptance": "assigned"/);
+});
+
 test("rate limiting prefers the atomic database limiter and keeps safe fallbacks", async () => {
   const source = await read("../lib/server/rate-limit.ts");
   assert.match(source, /createSupabaseAdminClient/);
