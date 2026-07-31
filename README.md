@@ -55,7 +55,7 @@ npm audit --omit=dev
    - `supabase/migrations/202607310002_service_rate_limits.sql`
    - `supabase/migrations/202607310003_launch_access_hardening.sql`
 3. Fill in the Supabase browser and server keys.
-4. Add NVIDIA NIM, Upstash, Resend, and Sentry settings.
+4. Add NVIDIA NIM, Upstash, and Sentry settings. Resend is optional; manual family invitations work without it.
 5. Keep `ALLOW_REAL_PATIENT_DATA=false` until an approved privacy and deployment review says otherwise.
 6. Run the persistence acceptance test in [docs/production-acceptance.md](docs/production-acceptance.md).
 
@@ -67,7 +67,7 @@ Configuration details are in [docs/production-setup.md](docs/production-setup.md
 - Public synthetic reviewer deployment: working at the link above.
 - Production build and local automated checks: passing.
 - Production dependency audit: zero known production vulnerabilities.
-- Production service readiness: Supabase, NVIDIA, Resend, Sentry, and database-backed rate limiting are active. Resend still needs a verified sending domain for automatic delivery to arbitrary family addresses; manual invitation fallback works now.
+- Production service readiness: Supabase, NVIDIA, Sentry, and database-backed rate limiting are active. External email is intentionally disabled; family access is saved and the caregiver receives a manual sign-in step.
 - Live Supabase core, remediation, and rate-limit migrations: applied and verified.
 - A repeatable synthetic caregiver household can be provisioned with `npm run seed:synthetic`; its password stays in the ignored `.env.synthetic.local` file.
 - Live production acceptance: passed for Protocol 9-Delta refusal, invitation, acceptance, minimum disclosure, permission revocation, membership revocation, and NVIDIA note processing.
