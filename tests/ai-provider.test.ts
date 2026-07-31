@@ -79,18 +79,29 @@ test("document output safely normalizes missing safety defaults", () => {
     documentType: "Synthetic discharge note",
     documentDate: null,
     summary: "Synthetic test document.",
-    commitments: [{ ...validCommitment, completionEvidence: null, requiresHumanReview: undefined }],
+    commitments: [{
+      ...validCommitment,
+      completionEvidence: null,
+      requiresHumanReview: undefined,
+      sourcePage: 0,
+    }],
     conflicts: [],
     warnings: [],
   }), analyzeDocumentResultSchema, normalizeAnalyzeDocumentOutput);
 
   assert.equal(result.commitments[0].completionEvidence, SAFE_COMPLETION_EVIDENCE);
   assert.equal(result.commitments[0].requiresHumanReview, true);
+  assert.equal(result.commitments[0].sourcePage, null);
   assert.throws(() => parseStructuredOutput(JSON.stringify({
     documentType: "Synthetic discharge note",
     documentDate: null,
     summary: "Synthetic test document.",
-    commitments: [{ ...validCommitment, completionEvidence: 42, requiresHumanReview: "no" }],
+    commitments: [{
+      ...validCommitment,
+      completionEvidence: 42,
+      requiresHumanReview: "no",
+      sourcePage: -1,
+    }],
     conflicts: [],
     warnings: [],
   }), analyzeDocumentResultSchema, normalizeAnalyzeDocumentOutput));

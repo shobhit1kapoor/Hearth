@@ -40,6 +40,7 @@ export function normalizeAnalyzeDocumentOutput(value: unknown) {
         ...(commitment.requiresHumanReview === null || commitment.requiresHumanReview === undefined
           ? { requiresHumanReview: true }
           : {}),
+        ...(commitment.sourcePage === 0 ? { sourcePage: null } : {}),
       };
     }),
   };
