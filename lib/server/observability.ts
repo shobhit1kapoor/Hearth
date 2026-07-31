@@ -9,6 +9,12 @@ export function recordServerError(error: unknown, context: {
   status?: number;
 }) {
   const safeMessage = redactLog(error instanceof Error ? error.message : "Unknown server error");
+  console.error("HEARTH server error", {
+    operation: context.operation,
+    route: context.route ?? "unknown",
+    status: context.status ?? 500,
+    message: safeMessage,
+  });
   Sentry.captureException(new Error(safeMessage), {
     tags: {
       operation: context.operation,

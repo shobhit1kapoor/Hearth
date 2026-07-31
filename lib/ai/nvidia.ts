@@ -1,5 +1,5 @@
 import { getServerEnvironment } from "@/lib/config/env";
-import { parseStructuredOutput } from "./json";
+import { normalizeAnalyzeDocumentOutput, parseStructuredOutput } from "./json";
 import type {
   AnalyzeDocumentInput,
   CompareInput,
@@ -42,11 +42,19 @@ export class NvidiaNimProvider implements HearthAIProvider {
         image_url: { url: `data:${image.mimeType};base64,${image.base64}` },
       });
     }
-    const content = await this.complete(
-      userContent,
-      jsonSchemaInstruction("document analysis", analyzeDocumentResultSchema),
-    );
-    return parseStructuredOutput(content, analyzeDocumentResultSchema);
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const content = await this.complete(
+        userContent,
+        jsonSchemaInstruction("document analysis", analyzeDocumentResultSchema),
+      );
+      try {
+        return parseStructuredOutput(content, analyzeDocumentResultSchema, normalizeAnalyzeDocumentOutput);
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError;
   }
 
   async compareInstructions(input: CompareInput) {

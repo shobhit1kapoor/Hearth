@@ -52,6 +52,7 @@ npm audit --omit=dev
 2. Create a Supabase project and apply these migrations in order:
    - `supabase/migrations/202607300001_hearth_core.sql`
    - `supabase/migrations/202607310001_holdout_remediation.sql`
+   - `supabase/migrations/202607310002_service_rate_limits.sql`
 3. Fill in the Supabase browser and server keys.
 4. Add NVIDIA NIM, Upstash, Resend, and Sentry settings.
 5. Keep `ALLOW_REAL_PATIENT_DATA=false` until an approved privacy and deployment review says otherwise.
@@ -65,8 +66,8 @@ Configuration details are in [docs/production-setup.md](docs/production-setup.md
 - Public synthetic reviewer deployment: working at the link above.
 - Production build and local automated checks: passing.
 - Production dependency audit: zero known production vulnerabilities.
-- Production service readiness: Supabase, NVIDIA, Upstash, Resend, and Sentry are connected.
-- Live Supabase core and remediation migrations: applied and verified.
+- Production service readiness: Supabase, NVIDIA, Resend, Sentry, and database-backed rate limiting are active.
+- Live Supabase core, remediation, and rate-limit migrations: applied and verified.
 - Two-account persistence acceptance: passed for invitation, acceptance, minimum disclosure, permission revocation, and membership revocation.
 
 HEARTH is not a medical device, clinical decision system, or emergency service. All reviewer data is synthetic.

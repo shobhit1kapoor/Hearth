@@ -1,8 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { z } from "zod";
-import { parseStructuredOutput } from "../lib/ai/json";
-import { careCommitmentCandidateSchema, compareResultSchema, jsonSchemaInstruction } from "../lib/ai/schemas";
+import {
+  normalizeAnalyzeDocumentOutput,
+  parseStructuredOutput,
+  SAFE_COMPLETION_EVIDENCE,
+} from "../lib/ai/json";
+import {
+  analyzeDocumentResultSchema,
+  careCommitmentCandidateSchema,
+  compareResultSchema,
+  jsonSchemaInstruction,
+} from "../lib/ai/schemas";
 import { analyzeDocumentPrompt, HEARTH_SYSTEM_PROMPT } from "../lib/ai/prompts";
 
 const validCommitment = {
@@ -63,4 +72,37 @@ test("live provider contracts include every required response field", () => {
   assert.match(contract, /conflicts/);
   assert.match(contract, /plainLanguageExplanation/);
   assert.match(contract, /one JSON object and no other text/i);
+});
+
+test("document output safely normalizes missing safety defaults", () => {
+  const result = parseStructuredOutput(JSON.stringify({
+    documentType: "Synthetic discharge note",
+    documentDate: null,
+    summary: "Synthetic test document.",
+    commitments: [{
+      ...validCommitment,
+      completionEvidence: null,
+      requiresHumanReview: undefined,
+      sourcePage: 0,
+    }],
+    conflicts: [],
+    warnings: [],
+  }), analyzeDocumentResultSchema, normalizeAnalyzeDocumentOutput);
+
+  assert.equal(result.commitments[0].completionEvidence, SAFE_COMPLETION_EVIDENCE);
+  assert.equal(result.commitments[0].requiresHumanReview, true);
+  assert.equal(result.commitments[0].sourcePage, null);
+  assert.throws(() => parseStructuredOutput(JSON.stringify({
+    documentType: "Synthetic discharge note",
+    documentDate: null,
+    summary: "Synthetic test document.",
+    commitments: [{
+      ...validCommitment,
+      completionEvidence: 42,
+      requiresHumanReview: "no",
+      sourcePage: -1,
+    }],
+    conflicts: [],
+    warnings: [],
+  }), analyzeDocumentResultSchema, normalizeAnalyzeDocumentOutput));
 });
