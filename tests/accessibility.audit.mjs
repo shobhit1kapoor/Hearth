@@ -30,15 +30,14 @@ async function audit(label) {
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 await audit("Caregiver entry");
-await page.getByRole("button", { name: "Try the sample case", exact: true }).click();
+await page.getByRole("link", { name: "Open demo — no sign in", exact: true }).click();
 await audit("Sample case home");
 await page.getByRole("button", { name: "Reviewer tour", exact: true }).click();
 await audit("Reviewer tour");
 await page.getByRole("button", { name: "Usability study" }).click();
 await audit("Usability study");
 
-await page.goto(baseUrl, { waitUntil: "networkidle" });
-await page.getByRole("button", { name: "Try the sample case", exact: true }).click();
+await page.goto(`${baseUrl}/demo`, { waitUntil: "networkidle" });
 await page.keyboard.press("Tab");
 const skipFocused = await page.locator(".skip-link").evaluate((element) => document.activeElement === element);
 await page.keyboard.press("Enter");
@@ -63,7 +62,7 @@ for (let index = 0; index < 18; index += 1) {
 await page.setViewportSize({ width: 320, height: 720 });
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 const entryOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
-await page.getByRole("button", { name: "Try the sample case", exact: true }).click();
+await page.goto(`${baseUrl}/demo`, { waitUntil: "networkidle" });
 const beforeOpen = await page.getByRole("button", { name: "Open navigation" }).isVisible();
 await page.getByRole("button", { name: "Open navigation" }).click();
 const mobileNavVisible = await page.getByRole("navigation", { name: "HEARTH sections" }).isVisible();

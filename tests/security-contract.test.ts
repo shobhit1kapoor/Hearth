@@ -91,6 +91,18 @@ test("caregiver receives a clear manual step when invitation email is unavailabl
   assert.match(source, /open HEARTH and sign in with/);
 });
 
+test("public demo mode opens without authentication and stays separate from caregiver mode", async () => {
+  const entry = await read("../app/AppEntry.tsx");
+  const demo = await read("../app/HearthApp.tsx");
+  const demoPage = await read("../app/demo/page.tsx");
+  assert.match(entry, /Open demo — no sign in/);
+  assert.match(entry, /href="\/demo"/);
+  assert.match(demoPage, /<HearthApp/);
+  assert.match(demo, /Made-up household\. No account is needed/);
+  assert.match(demo, /setResolution\(initialResolution\)/);
+  assert.doesNotMatch(demo, /createSupabase|requireUser|signInWith/);
+});
+
 test("validated sample waits for a helper selection before acceptance", async () => {
   const source = await read("../app/api/demo/load/route.ts");
   assert.match(source, /"Awaiting acceptance": "assigned"/);

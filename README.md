@@ -8,7 +8,7 @@ HEARTH does not diagnose, choose between conflicting medical instructions, or ch
 
 [Open the safe synthetic reviewer build](https://hearth-care-five.vercel.app).
 
-Choose **Try the sample case** for the fastest review. The private caregiver workspace is also connected for controlled testing. Real patient data remains disabled on the public deployment.
+Choose **Open demo — no sign in** for the fastest review. The demo uses only made-up local data and can be reset at any time. The private caregiver workspace is also connected for controlled testing. Real patient data remains disabled on the public deployment.
 
 ## What you can test now
 
@@ -29,8 +29,8 @@ Open the address printed by Next.js. It is normally `http://localhost:3000`.
 
 Choose:
 
-- **Try the sample case** to test immediately with made-up information.
-- **Create my care space** to test the real sign-up and persistent workflow after services are configured.
+- **Open demo — no sign in** to test immediately with made-up information.
+- **Sign in or create an account** to test the real persistent caregiver workflow after services are configured.
 
 Do not enter real patient information in a local or reviewer deployment.
 
