@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-07-31T14:45:41.358Z",
+  "auditedAt": "2026-07-31T16:19:59.083Z",
   "baseUrl": "https://hearth-care-five.vercel.app",
   "tool": "Playwright + axe-core",
   "axe": {
@@ -8,26 +8,26 @@
         "label": "Caregiver entry",
         "url": "https://hearth-care-five.vercel.app/",
         "violations": [],
-        "passes": 18,
+        "passes": 20,
         "incomplete": 1
       },
       {
         "label": "Sample case home",
-        "url": "https://hearth-care-five.vercel.app/",
+        "url": "https://hearth-care-five.vercel.app/demo",
         "violations": [],
         "passes": 22,
         "incomplete": 1
       },
       {
         "label": "Reviewer tour",
-        "url": "https://hearth-care-five.vercel.app/",
+        "url": "https://hearth-care-five.vercel.app/demo",
         "violations": [],
         "passes": 22,
         "incomplete": 1
       },
       {
         "label": "Usability study",
-        "url": "https://hearth-care-five.vercel.app/",
+        "url": "https://hearth-care-five.vercel.app/demo",
         "violations": [],
         "passes": 25,
         "incomplete": 1
@@ -42,6 +42,16 @@
     "sampledFocusIndicatorsVisible": true,
     "samples": [
       {
+        "tag": "A",
+        "name": "Exit demo",
+        "visible": true
+      },
+      {
+        "tag": "BUTTON",
+        "name": "Reset demo",
+        "visible": true
+      },
+      {
         "tag": "BUTTON",
         "name": "Restart tour",
         "visible": true
@@ -53,7 +63,7 @@
       },
       {
         "tag": "BODY",
-        "name": "Skip to main content\nHEARTH\nCare, one step at a time\nEB\nEleanor’s care\nExample · day 2 at home\nCARE\nHome\nToday\nCare plan\nCare information\nFamily help\nMore care tools\nFor reviewers\nReview extracted tasks\nActivity history\nHow this was tested\nUsability study\nReviewer tour\nYou stay in control\nReview before anything is shared\nEleanor’s care\nReviewer tour\nExample household\n!\nNeeds attention\nReviewer tour\n\nREVIEWER TOUR · 3–5 MINUTES\n\nSee how the care plan becomes clear\n\nEach step changes the example while keeping people in control.\n\nRestart tour\nCare plan change\n! Needs attention\n✓\nReady with checks\n0 of 9\nsteps complete\nNEXT STEP · 01\nCorrect the uncertain voice-note extraction\n\nMaya records that “blue pill” is not identifiable and must not become a care instruction.\n\nComplete this step\n01\nCorrect the uncertain voice-note extraction\n\nMaya records that “blue pill” is not identifiable and must not become a care instruction.\n\nNot yet run\n02\nPrepare a pharmacist question\n\nHEARTH drafts a source-grounded question with both insulin excerpts; Maya reviews before sending.\n\nNot yet run\n03\nRecord the simulated pharmacist resolution\n\nA controlled response identifies the active source. Maya explicitly confirms activation.\n\nNot yet run\n04\nAssign transportation with minimum disclosure\n\nDaniel receives only date, time, location, walker support, and contact instructions.\n\nNot yet run\n05\nVerify a working scale\n\nA community-resource simulation confirms a stable digital scale is available before morning.\n\nNot yet run\n06\nArrange qualified wound-care support\n\nHome health confirms the first dressing change and a caregiver teach-back session.\n\nNot yet run\n07\nRedistribute the evening workload\n\nPickup, transport, home safety, and visit-packet work move to permitted helpers.\n\nNot yet run\n08\nTrack provider acknowledgement\n\nMaya approves the prepared reply and a controlled cardiology response is recorded.\n\nNot yet run\n09\nEscalate the unknown instruction\n\nHEARTH abstains and keeps the item open with the prescriber as the only resolver.\n\nNot yet run\nExample household\nThis demo does not connect to a real doctor, pharmacy, insurer, or care record.\nHEARTH example\nAll people and records shown are made up.\nHEARTH does not give medical advice.",
+        "name": "Skip to main content\nHEARTH\nCare, one step at a time\nEB\nEleanor’s care\nExample · day 2 at home\nCARE\nHome\nToday\nCare plan\nCare information\nFamily help\nMore care tools\nFor reviewers\nReview extracted tasks\nActivity history\nHow this was tested\nUsability study\nReviewer tour\nYou stay in control\nReview before anything is shared\nEleanor’s care\nReviewer tour\nDemo mode · No sign-in\n!\nNeeds attention\nReviewer tour\nExit demo\nDemo mode\nMade-up household. No account is needed, and changes are not saved to a caregiver account.\nReset demo\n\nREVIEWER TOUR · 3–5 MINUTES\n\nSee how the care plan becomes clear\n\nEach step changes the example while keeping people in control.\n\nRestart tour\nCare plan change\n! Needs attention\n✓\nReady with checks\n0 of 9\nsteps complete\nNEXT STEP · 01\nCorrect the uncertain voice-note extraction\n\nMaya records that “blue pill” is not identifiable and must not become a care instruction.\n\nComplete this step\n01\nCorrect the uncertain voice-note extraction\n\nMaya records that “blue pill” is not identifiable and must not become a care instruction.\n\nNot yet run\n02\nPrepare a pharmacist question\n\nHEARTH drafts a source-grounded question with both insulin excerpts; Maya reviews before sending.\n\nNot yet run\n03\nRecord the simulated pharmacist resolution\n\nA controlled response identifies the active source. Maya explicitly confirms activation.\n\nNot yet run\n04\nAssign transportation with minimum disclosure\n\nDaniel receives only date, time, location, walker support, and contact instructions.\n\nNot yet run\n05\nVerify a working scale\n\nA community-resource simulation confirms a stable digital scale is available before morning.\n\nNot yet run\n06\nArrange qualified wound-care support\n\nHome health confirms the first dressing change and a caregiver teach-back session.\n\nNot yet run\n07\nRedistribute the evening workload\n\nPickup, transport, home safety, and visit-packet work move to permitted helpers.\n\nNot yet run\n08\nTrack provider acknowledgement\n\nMaya approves the prepared reply and a controlled cardiology response is recorded.\n\nNot yet run\n09\nEscalate the unknown instruction\n\nHEARTH abstains and keeps the item open with the prescriber as the only resolver.\n\nNot yet run\nExample household\nThis demo does not connect to a real doctor, pharmacy, insurer, or care record.\nHEARTH example\nAll people and records shown are made up.\nHEARTH does not give medical advice.",
         "visible": true
       },
       {
@@ -119,16 +129,6 @@
       {
         "tag": "BUTTON",
         "name": "Reviewer tour",
-        "visible": true
-      },
-      {
-        "tag": "BUTTON",
-        "name": "Reviewer tour",
-        "visible": true
-      },
-      {
-        "tag": "BUTTON",
-        "name": "Restart tour",
         "visible": true
       }
     ]
