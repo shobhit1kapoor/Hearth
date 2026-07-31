@@ -1,20 +1,21 @@
 # Automated accessibility results
 
-Executed: 2026-07-29T12:55:14.392Z  
-Runtime: Playwright Chromium with axe-core WCAG 2 A/AA, 2.1 AA, and 2.2 AA rules  
-Target: http://localhost:4173
+Executed: 2026-07-31T08:18:54.541Z
+Runtime: Playwright Chromium with axe-core WCAG 2 A/AA, 2.1 AA, and 2.2 AA rules
+Target: https://hearth-care-five.vercel.app
 
 ## Summary
 
 | Check | Result |
 |---|---|
-| Axe page states | 3 |
+| Axe page states | 4 |
 | Axe rule violations | 0 |
 | Serious or critical violations | 0 |
 | Skip link receives first focus | Pass |
 | Skip link moves focus to main | Pass |
 | Sampled focus indicators visible | Pass |
 | 320px navigation available | Pass |
+| 320px caregiver entry horizontal overflow | Pass |
 | 320px welcome horizontal overflow | Pass |
 | 320px burden-study horizontal overflow | Pass |
 

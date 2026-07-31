@@ -2,18 +2,19 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "HEARTH · Care execution assurance",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  title: "HEARTH · Care, one step at a time",
   description:
-    "A caregiver-first TRL-3 proof of concept that turns fragmented post-discharge information into source-grounded, permission-aware, closed-loop responsibilities.",
+    "A calm caregiver workspace that shows what to do next, what can wait, and who can help.",
   openGraph: {
-    title: "HEARTH · Care execution assurance",
-    description: "Care information, made executable.",
+    title: "HEARTH · Care, one step at a time",
+    description: "Know what to do next.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "HEARTH · Care execution assurance",
-    description: "Care information, made executable.",
+    title: "HEARTH · Care, one step at a time",
+    description: "Know what to do next.",
   },
 };
 

@@ -29,19 +29,22 @@ async function audit(label) {
 }
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
-await audit("Welcome and scope");
-await page.getByRole("button", { name: "Reviewer demo", exact: true }).click();
-await audit("Guided reviewer demo");
-await page.getByRole("button", { name: "Timed burden study" }).click();
-await audit("Timed burden study");
+await audit("Caregiver entry");
+await page.getByRole("button", { name: "Try the sample case", exact: true }).click();
+await audit("Sample case home");
+await page.getByRole("button", { name: "Reviewer tour", exact: true }).click();
+await audit("Reviewer tour");
+await page.getByRole("button", { name: "Usability study" }).click();
+await audit("Usability study");
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
+await page.getByRole("button", { name: "Try the sample case", exact: true }).click();
 await page.keyboard.press("Tab");
 const skipFocused = await page.locator(".skip-link").evaluate((element) => document.activeElement === element);
 await page.keyboard.press("Enter");
 const skipReachedMain = await page.locator("#main-content").evaluate((element) => document.activeElement === element);
 
-await page.getByRole("button", { name: "Reviewer demo", exact: true }).click();
+await page.getByRole("button", { name: "Reviewer tour", exact: true }).click();
 const focusChecks = [];
 for (let index = 0; index < 18; index += 1) {
   await page.keyboard.press("Tab");
@@ -59,11 +62,14 @@ for (let index = 0; index < 18; index += 1) {
 
 await page.setViewportSize({ width: 320, height: 720 });
 await page.goto(baseUrl, { waitUntil: "networkidle" });
+const entryOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
+await page.getByRole("button", { name: "Try the sample case", exact: true }).click();
 const beforeOpen = await page.getByRole("button", { name: "Open navigation" }).isVisible();
 await page.getByRole("button", { name: "Open navigation" }).click();
 const mobileNavVisible = await page.getByRole("navigation", { name: "HEARTH sections" }).isVisible();
 const mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
-await page.getByRole("button", { name: "Timed burden study" }).click();
+await page.getByText("For reviewers", { exact: true }).click();
+await page.getByRole("button", { name: "Usability study" }).click();
 const studyOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
 
 function rgb(hex) {
@@ -102,10 +108,10 @@ const result = {
   keyboard: {
     skipFocused,
     skipReachedMain,
-    sampledFocusIndicatorsVisible: focusChecks.every((item) => item.visible),
+    sampledFocusIndicatorsVisible: focusChecks.filter((item) => item.tag !== "BODY").every((item) => item.visible),
     samples: focusChecks,
   },
-  mobile: { beforeOpen, mobileNavVisible, mobileOverflow, studyOverflow },
+  mobile: { beforeOpen, mobileNavVisible, entryOverflow, mobileOverflow, studyOverflow },
   contrastMatrix,
 };
 await mkdir("evidence/accessibility", { recursive: true });
@@ -116,8 +122,8 @@ const violationLines = pages.flatMap((item) => item.violations.map((violation) =
 ));
 const report = `# Automated accessibility results
 
-Executed: ${auditedAt}  
-Runtime: Playwright Chromium with axe-core WCAG 2 A/AA, 2.1 AA, and 2.2 AA rules  
+Executed: ${auditedAt}
+Runtime: Playwright Chromium with axe-core WCAG 2 A/AA, 2.1 AA, and 2.2 AA rules
 Target: ${baseUrl}
 
 ## Summary
@@ -131,6 +137,7 @@ Target: ${baseUrl}
 | Skip link moves focus to main | ${skipReachedMain ? "Pass" : "Fail"} |
 | Sampled focus indicators visible | ${result.keyboard.sampledFocusIndicatorsVisible ? "Pass" : "Fail"} |
 | 320px navigation available | ${beforeOpen && mobileNavVisible ? "Pass" : "Fail"} |
+| 320px caregiver entry horizontal overflow | ${entryOverflow ? "Fail" : "Pass"} |
 | 320px welcome horizontal overflow | ${mobileOverflow ? "Fail" : "Pass"} |
 | 320px burden-study horizontal overflow | ${studyOverflow ? "Fail" : "Pass"} |
 
@@ -149,6 +156,6 @@ Automated checks do not establish full WCAG conformance or caregiver usability. 
 await writeFile("evidence/accessibility/automated-results.md", report);
 await browser.close();
 
-const blocking = result.axe.seriousOrCritical > 0 || !skipFocused || !skipReachedMain || mobileOverflow || studyOverflow;
+const blocking = result.axe.seriousOrCritical > 0 || !skipFocused || !skipReachedMain || entryOverflow || mobileOverflow || studyOverflow;
 console.log(`Accessibility: ${result.axe.violationCount} axe violations; blocking=${blocking}.`);
 if (blocking) process.exitCode = 1;

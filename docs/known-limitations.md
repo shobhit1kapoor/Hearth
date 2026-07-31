@@ -1,5 +1,11 @@
 # Known limitations
 
+## Production connection status
+
+The real caregiver architecture is implemented, but Supabase, NVIDIA, Upstash, Resend, and Sentry are not configured. The migration has not been applied to a live database, and the end-to-end persistence acceptance suite has not been run. Real caregiver mode therefore shows a clear configuration blocker and does not accept patient data.
+
+The public Vercel reviewer case remains synthetic. It demonstrates the workflow but does not prove live AI quality, email delivery, cross-account RLS behavior, or production deletion.
+
 ## Evidence and research
 
 - Caregiver interview materials were unavailable; no real user findings or quotes are represented.

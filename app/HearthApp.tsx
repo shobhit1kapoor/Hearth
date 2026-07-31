@@ -42,7 +42,6 @@ import {
   commitments,
   compileMission,
   initialResolution,
-  minimumNecessaryDisclosure,
   permissionRules,
   sources,
   type Commitment,
@@ -73,24 +72,24 @@ const navItems: {
   id: Screen;
   label: string;
   icon: typeof Home;
-  group: "Mission" | "Safeguards" | "Proof";
+  group: "Care" | "More" | "Reviewer";
 }[] = [
-  { id: "welcome", label: "Welcome & scope", icon: Home, group: "Mission" },
-  { id: "today", label: "Today’s mission", icon: Clock3, group: "Mission" },
-  { id: "reality", label: "Reality check", icon: ShieldCheck, group: "Mission" },
-  { id: "board", label: "Mission board", icon: ListChecks, group: "Mission" },
-  { id: "inbox", label: "Care inbox", icon: Inbox, group: "Mission" },
-  { id: "compile", label: "Compilation review", icon: FileCheck2, group: "Mission" },
-  { id: "medications", label: "Medication safety", icon: Pill, group: "Safeguards" },
-  { id: "appointments", label: "Appointments", icon: CalendarClock, group: "Safeguards" },
-  { id: "circle", label: "Family care circle", icon: Users, group: "Safeguards" },
-  { id: "capacity", label: "Capacity shield", icon: Scale, group: "Safeguards" },
-  { id: "consent", label: "Permission vault", icon: KeyRound, group: "Safeguards" },
-  { id: "receipts", label: "Accountability receipts", icon: ReceiptText, group: "Proof" },
-  { id: "trust", label: "Trust & privacy", icon: Archive, group: "Proof" },
-  { id: "evidence", label: "Evidence & validation", icon: BookOpenCheck, group: "Proof" },
-  { id: "study", label: "Timed burden study", icon: Clock3, group: "Proof" },
-  { id: "demo", label: "Guided reviewer demo", icon: Sparkles, group: "Proof" },
+  { id: "welcome", label: "Home", icon: Home, group: "Care" },
+  { id: "today", label: "Today", icon: Clock3, group: "Care" },
+  { id: "board", label: "Care plan", icon: ListChecks, group: "Care" },
+  { id: "inbox", label: "Care information", icon: Inbox, group: "Care" },
+  { id: "circle", label: "Family help", icon: Users, group: "Care" },
+  { id: "reality", label: "What needs attention", icon: ShieldCheck, group: "More" },
+  { id: "medications", label: "Medicine questions", icon: Pill, group: "More" },
+  { id: "appointments", label: "Visits", icon: CalendarClock, group: "More" },
+  { id: "capacity", label: "My time and energy", icon: Scale, group: "More" },
+  { id: "consent", label: "Sharing", icon: KeyRound, group: "More" },
+  { id: "trust", label: "Privacy", icon: Archive, group: "More" },
+  { id: "compile", label: "Review extracted tasks", icon: FileCheck2, group: "Reviewer" },
+  { id: "receipts", label: "Activity history", icon: ReceiptText, group: "Reviewer" },
+  { id: "evidence", label: "How this was tested", icon: BookOpenCheck, group: "Reviewer" },
+  { id: "study", label: "Usability study", icon: Clock3, group: "Reviewer" },
+  { id: "demo", label: "Reviewer tour", icon: Sparkles, group: "Reviewer" },
 ];
 
 const demoSteps: {
@@ -163,10 +162,17 @@ function statusClass(status: MissionStatus) {
 }
 
 function StatusMark({ status }: { status: MissionStatus }) {
+  const label = status === "NOT EXECUTABLE"
+    ? "Needs attention"
+    : status === "READY WITH CONTROLS"
+      ? "Ready with checks"
+      : status === "HOLD"
+        ? "Paused"
+        : "Ready";
   return (
     <span className={`status-pill ${statusClass(status)}`}>
-      <span aria-hidden="true">{status === "NOT EXECUTABLE" ? "×" : "✓"}</span>
-      {status}
+      <span aria-hidden="true">{status === "NOT EXECUTABLE" ? "!" : "✓"}</span>
+      {label}
     </span>
   );
 }
@@ -225,7 +231,7 @@ function FindingCard({
     <article className={`finding-card severity-${finding.severity.toLowerCase()} ${finding.resolved ? "is-resolved" : ""}`}>
       <div className="finding-code">
         <span>{finding.code}</span>
-        <span>{finding.resolved ? "Control satisfied" : finding.severity}</span>
+        <span>{finding.resolved ? "Checked" : "Needs follow-up"}</span>
       </div>
       <h3>{finding.title}</h3>
       <p>{finding.explanation}</p>
@@ -233,21 +239,21 @@ function FindingCard({
         <>
           <dl className="finding-details">
             <div>
-              <dt>Evidence</dt>
+              <dt>What we checked</dt>
               <dd>{finding.evidence.join(" · ")}</dd>
             </div>
             <div>
-              <dt>Required action</dt>
+              <dt>What to do</dt>
               <dd>{finding.requiredAction}</dd>
             </div>
             <div>
-              <dt>Resolver</dt>
+              <dt>Who can help</dt>
               <dd>{finding.resolver}</dd>
             </div>
           </dl>
           <p className="continue-note">
             <Check size={15} aria-hidden="true" />
-            Unaffected responsibilities may continue.
+            Other care tasks can continue.
           </p>
         </>
       )}
@@ -342,8 +348,8 @@ function SimulationNotice() {
     <div className="simulation-notice" role="note">
       <Box size={18} aria-hidden="true" />
       <div>
-        <strong>Controlled Phase 1 simulation</strong>
-        <span>Not connected to a real provider, pharmacy, insurer, or health record.</span>
+        <strong>Example household</strong>
+        <span>This demo does not connect to a real doctor, pharmacy, insurer, or care record.</span>
       </div>
     </div>
   );
@@ -360,55 +366,54 @@ function WelcomeScreen({
     <>
       <section className="welcome-hero">
         <div className="welcome-copy">
-          <p className="eyebrow">Home Execution Assurance, Resilience, and Trust Hub</p>
-          <h1>Make the care plan possible—not merely organized.</h1>
+          <p className="eyebrow">Care, one step at a time</p>
+          <h1>Know what to do next.</h1>
           <p>
-            HEARTH turns fragmented post-discharge information into source-grounded responsibilities with owners,
-            permissions, safety controls, completion evidence, and human escalation.
+            HEARTH brings today’s care tasks, questions, and family help into one calm place.
           </p>
           <div className="hero-actions">
             <button className="primary-button" onClick={onOpen}>
-              Open Eleanor’s synthetic mission <ArrowRight size={17} aria-hidden="true" />
+              See today’s next step <ArrowRight size={19} aria-hidden="true" />
             </button>
-            <StatusMark status={status} />
           </div>
+          <p className="resume-note"><Clock3 size={18} aria-hidden="true" /> You can stop and come back at any time.</p>
           <SimulationNotice />
         </div>
         <aside className="case-card" aria-label="Demonstration case summary">
           <div className="case-monogram" aria-hidden="true">EB</div>
           <div>
-            <p className="eyebrow">30-day transition mission</p>
+            <p className="eyebrow">Today’s care</p>
             <h2>Eleanor Brooks</h2>
-            <p>78 · moderate dementia · diabetes · heart failure · mobility limitations</p>
+            <p>Day 2 at home · Maya is the main caregiver</p>
           </div>
           <div className="case-grid">
-            <div><span>Primary caregiver</span><strong>Maya · daughter</strong></div>
-            <div><span>Available capacity</span><strong>20 hours / week</strong></div>
-            <div><span>Compiled objects</span><strong>26 responsibilities</strong></div>
-            <div><span>Current blockers</span><strong>6 high-risk gaps</strong></div>
+            <div><span>Next step</span><strong>Ask about insulin amount</strong></div>
+            <div><span>Today</span><strong>4 care tasks</strong></div>
+            <div><span>Family help</span><strong>2 people available</strong></div>
+            <div><span>Care status</span><StatusMark status={status} /></div>
           </div>
         </aside>
       </section>
       <section className="boundary-section">
         <div>
-          <p className="eyebrow">A careful boundary</p>
-          <h2>What HEARTH does—and refuses to do</h2>
+          <p className="eyebrow">What to expect</p>
+          <h2>HEARTH helps you stay organized.</h2>
         </div>
         <div className="boundary-grid">
           <article>
             <Check aria-hidden="true" />
-            <h3>Structures and checks</h3>
-            <p>Finds responsibilities, keeps exact provenance, tests feasibility, and prepares low-risk actions.</p>
+            <h3>Shows one next step</h3>
+            <p>See what matters now and what can wait.</p>
           </article>
           <article>
             <UserRoundCheck aria-hidden="true" />
-            <h3>Preserves human authority</h3>
-            <p>Care recipients control access. Caregivers review corrections. Professionals resolve clinical conflicts.</p>
+            <h3>Keeps people in charge</h3>
+            <p>You choose what to approve and share.</p>
           </article>
           <article className="boundary-no">
             <X aria-hidden="true" />
-            <h3>Does not diagnose or prescribe</h3>
-            <p>HEARTH never changes treatment, invents unknown instructions, or treats a drafted message as completion.</p>
+            <h3>Does not give medical advice</h3>
+            <p>Questions about medicine stay with a doctor or pharmacist.</p>
           </article>
         </div>
       </section>
@@ -430,13 +435,14 @@ function TodayScreen({
     <>
       <ScreenHeader
         eyebrow="Monday · day 2 at home"
-        title="One safe next action"
-        description="HEARTH groups the rest so Maya can focus without losing the full audit trail."
-      >
-        <button className="secondary-button" onClick={() => window.print()}>
-          <Printer size={16} aria-hidden="true" /> Print today
-        </button>
-      </ScreenHeader>
+        title="Today"
+        description="Start with this one step. The rest can wait."
+      />
+      <div className="resume-banner" role="status">
+        <Clock3 size={20} aria-hidden="true" />
+        <div><strong>Your place is easy to find again.</strong><span>Finish one step, pause, or come back later.</span></div>
+        <button className="text-button" onClick={() => window.print()}><Printer size={17} aria-hidden="true" /> Print</button>
+      </div>
       <section className="primary-action-card">
         <div className="action-sequence">
           <span>01</span>
@@ -446,12 +452,12 @@ function TodayScreen({
           <span>03</span>
         </div>
         <div className="action-main">
-          <span className="urgent-label"><CircleAlert size={15} /> Must be resolved before tonight</span>
+          <span className="urgent-label"><CircleAlert size={17} /> Do this first</span>
           <h2>{nextAction.responsibility}</h2>
           <p>
             {resolution.medicationResolved
-              ? "The medication conflict is controlled. The next blocking dependency is the unavailable scale."
-              : "Two sources disagree. No dose is active in HEARTH until a pharmacist or prescriber resolves the conflict and Maya confirms it."}
+              ? "A working scale is needed for tomorrow morning."
+              : "Two care lists show different amounts. Ask a pharmacist or doctor which one is current."}
           </p>
           <div className="action-meta">
             <span><Clock3 size={15} /> {nextAction.dueWindow}</span>
@@ -459,23 +465,23 @@ function TodayScreen({
             <SourceBadge sourceId={nextAction.sourceId} />
           </div>
           <button className="primary-button" onClick={() => goTo(resolution.medicationResolved ? "reality" : "medications")}>
-            {resolution.medicationResolved ? "Review remaining blockers" : "Open safe medication workflow"}
+            {resolution.medicationResolved ? "See what to do" : "Prepare the question"}
             <ArrowRight size={17} />
           </button>
         </div>
         <aside className="why-card">
-          <span>Why this comes first</span>
-          <strong>{resolution.medicationResolved ? "Equipment blocks a verified instruction." : "A clinical conflict blocks three downstream responsibilities."}</strong>
-          <p>Unrelated low-risk work may continue. HEARTH does not freeze the entire mission.</p>
+          <span>Why this is first</span>
+          <strong>{resolution.medicationResolved ? "It is needed tomorrow morning." : "The amount needs a clear answer."}</strong>
+          <p>Other care tasks can still continue.</p>
         </aside>
       </section>
       <section className="section-block">
         <div className="section-title-row">
           <div>
-            <p className="eyebrow">Grouped for lower interruption</p>
-            <h2>After the primary action</h2>
+            <p className="eyebrow">Later</p>
+            <h2>After this step</h2>
           </div>
-          <span className="quiet-note">Nonurgent updates held until 4:30 PM</span>
+          <span className="quiet-note">Nothing else needs your attention now.</span>
         </div>
         <div className="compact-task-grid">
           {commitments.slice(4, 8).map((item) => (
@@ -495,12 +501,12 @@ function InboxScreen({ goTo }: { goTo: (screen: Screen) => void }) {
   return (
     <>
       <ScreenHeader
-        eyebrow="Care inbox"
-        title="Every instruction keeps its source"
-        description="Documents, notes, permissions, availability, and simulated health-record data are reviewed as untrusted inputs."
+        eyebrow="Care information"
+        title="All care information in one place"
+        description="See where each note came from and what still needs a quick check."
       >
         <button className="secondary-button">
-          <Inbox size={16} /> Add a synthetic source
+          <Inbox size={18} /> Add an example note
         </button>
       </ScreenHeader>
       <SimulationNotice />
@@ -523,9 +529,9 @@ function InboxScreen({ goTo }: { goTo: (screen: Screen) => void }) {
               </div>
               <p>{source.date} · {source.origin}</p>
               <div className="source-footer">
-                <span>{source.extractedCount} extracted responsibilities</span>
-                <span>Synthetic demonstration data</span>
-                <button onClick={() => goTo("compile")}>Review extraction <ChevronRight size={14} /></button>
+                <span>{source.extractedCount} care tasks found</span>
+                <span>Example data</span>
+                <button onClick={() => goTo("compile")}>Review tasks <ChevronRight size={16} /></button>
               </div>
             </div>
           </article>
@@ -534,8 +540,8 @@ function InboxScreen({ goTo }: { goTo: (screen: Screen) => void }) {
       <div className="prompt-defense">
         <ShieldCheck aria-hidden="true" />
         <div>
-          <strong>Uploaded content cannot change HEARTH’s safety policy.</strong>
-          <p>Instructions inside files are treated as data. Embedded requests to reveal data, bypass review, or activate treatment are rejected and logged.</p>
+          <strong>Notes cannot change HEARTH’s safety rules.</strong>
+          <p>You still review anything that could affect care or sharing.</p>
         </div>
       </div>
     </>
@@ -559,15 +565,15 @@ function CompilationScreen({
   return (
     <>
       <ScreenHeader
-        eyebrow="Care responsibility compiler"
-        title="26 Care Commitment Objects"
-        description="These are auditable responsibilities—not checklist items. Expand any row to inspect source, authority, completion evidence, backup, and escalation."
+        eyebrow="Review care tasks"
+        title="Check the tasks HEARTH found"
+        description="Open a task to see where it came from, who can help, and what needs to happen."
       />
       <div className="compiler-summary">
-        <Metric value="26" label="responsibilities" detail="from 10 synthetic sources" />
-        <Metric value="100%" label="provenance coverage" detail="source and excerpt retained" tone="good" />
-        <Metric value="3" label="human reviews" detail="cannot activate automatically" tone="warn" />
-        <Metric value="1" label="correction recorded" detail={resolution.extractionCorrected ? "caregiver correction saved" : "awaiting caregiver review"} tone="neutral" />
+        <Metric value="26" label="care tasks" detail="from 10 example notes" />
+        <Metric value="26" label="linked to a source" detail="you can check every one" tone="good" />
+        <Metric value="3" label="need a person to review" detail="HEARTH will not decide them" tone="warn" />
+        <Metric value="1" label="wording check" detail={resolution.extractionCorrected ? "Maya’s correction saved" : "waiting for Maya"} tone="neutral" />
       </div>
       <div className="filter-bar" aria-label="Filter commitments">
         {["All", "Review", "Blocked", "Critical", "High"].map((item) => (
@@ -585,14 +591,14 @@ function CompilationScreen({
         <div className="correction-callout">
           <MessageSquareText aria-hidden="true" />
           <div>
-            <strong>Caregiver review requested · CCO-008</strong>
-            <p>“Blue pill if needed” is too uncertain to activate. Confirm that the medicine cannot be identified from the note.</p>
+            <strong>Please check one unclear note</strong>
+            <p>“Blue pill if needed” does not identify a medicine. Confirm that the note is unclear.</p>
           </div>
           <button
             className="secondary-button"
             onClick={() => setResolution((value) => ({ ...value, extractionCorrected: true }))}
           >
-            Record correction
+            Mark as unclear
           </button>
         </div>
       )}
@@ -600,8 +606,8 @@ function CompilationScreen({
         <div className="success-callout">
           <Check aria-hidden="true" />
           <div>
-            <strong>Correction saved without erasing the original</strong>
-            <p>Maya marked the phrase unidentifiable. The original transcript and change history remain available.</p>
+            <strong>Correction saved</strong>
+            <p>Maya marked the words as unclear. The original note is still available.</p>
           </div>
         </div>
       )}
@@ -614,60 +620,65 @@ function CompilationScreen({
 
 function RealityScreen({
   mission,
-  runNextStep,
+  goTo,
+  resolution,
 }: {
   mission: ReturnType<typeof compileMission>;
-  runNextStep: () => void;
+  goTo: (screen: Screen) => void;
+  resolution: DemoResolution;
 }) {
   const open = mission.findings.filter((finding) => !finding.resolved);
   const controls = mission.findings.filter((finding) => finding.resolved);
   return (
     <>
       <ScreenHeader
-        eyebrow="HEARTH reality check"
-        title="Can this entire plan be executed?"
-        description="The answer is derived from ownership, permissions, time, equipment, skill, source quality, and closed-loop outcomes."
-      >
-        <button className="primary-button" onClick={runNextStep}>
-          Resolve next safe step <ArrowRight size={17} />
-        </button>
-      </ScreenHeader>
+        eyebrow="What needs attention"
+        title={open.length === 0 ? "Everything has a clear path" : `${open.length} things still need follow-up`}
+        description="Start with the first item. Other care tasks can continue."
+      />
       <section className={`reality-banner ${statusClass(mission.status)}`}>
-        <div className="reality-icon">{mission.status === "NOT EXECUTABLE" ? "×" : "✓"}</div>
+        <div className="reality-icon">{mission.status === "NOT EXECUTABLE" ? "!" : "✓"}</div>
         <div>
-          <span>Current mission state</span>
-          <h2>{mission.status}</h2>
+          <span>Care plan</span>
+          <h2>{mission.status === "NOT EXECUTABLE" ? "Needs a few answers" : "Ready with checks"}</h2>
           <p>
             {mission.status === "NOT EXECUTABLE"
-              ? `${mission.blockerCount} high-risk conditions prevent safe execution. Lower-risk, unaffected responsibilities may continue.`
-              : "The plan is executable only while the visible professional reviews, task-specific permissions, and human approvals remain in place."}
+              ? "Some care tasks need a person, a piece of equipment, or a clear answer."
+              : "The remaining checks and approvals are visible in the care plan."}
           </p>
         </div>
         <div className="reality-score">
           <strong>{mission.findings.filter((item) => item.resolved).length}/{mission.findings.length}</strong>
-          <span>controls satisfied</span>
+          <span>checks complete</span>
         </div>
       </section>
       {open.length > 0 && (
         <section className="section-block">
           <div className="section-title-row">
-            <div><p className="eyebrow">Action required</p><h2>Open compiler findings</h2></div>
-            <span className="count-badge">{open.length} open</span>
+            <div><p className="eyebrow">Start here</p><h2>{open[0].title}</h2></div>
+            <span className="count-badge">1 next step</span>
           </div>
-          <div className="finding-grid">
-            {open.map((finding) => <FindingCard key={finding.code} finding={finding} />)}
-          </div>
+          <article className="next-attention-card">
+            <p>{open[0].explanation}</p>
+            <div><strong>Who can help</strong><span>{open[0].resolver}</span></div>
+            <button className="primary-button" onClick={() => goTo(resolution.medicationResolved ? "capacity" : "medications")}>
+              {resolution.medicationResolved ? "Review help options" : "Prepare the medicine question"} <ArrowRight size={18} />
+            </button>
+          </article>
+          <details className="secondary-details">
+            <summary>See all {open.length} items</summary>
+            <div className="finding-grid">
+              {open.map((finding) => <FindingCard key={finding.code} finding={finding} />)}
+            </div>
+          </details>
         </section>
       )}
-      <section className="section-block">
-        <div className="section-title-row">
-          <div><p className="eyebrow">Still visible</p><h2>Satisfied safeguards and retained controls</h2></div>
-          <span className="count-badge">{controls.length} active</span>
-        </div>
+      <details className="secondary-details section-block">
+        <summary>See {controls.length} completed checks</summary>
         <div className="finding-grid finding-grid-compact">
           {controls.map((finding) => <FindingCard key={finding.code} finding={finding} compact />)}
         </div>
-      </section>
+      </details>
     </>
   );
 }
@@ -692,9 +703,9 @@ function BoardScreen({ resolution }: { resolution: DemoResolution }) {
   return (
     <>
       <ScreenHeader
-        eyebrow="Closed-loop mission board"
-        title="Open until an outcome is known"
-        description="A draft, request, or sent message never closes a responsibility. Every state change adds a history event."
+        eyebrow="Care plan"
+        title="See what is happening and what is done"
+        description="A task stays open until someone confirms the result."
       />
       <div className="state-rail">
         {["Identified", "Assigned", "Accepted", "In progress", "Waiting", "Completed", "Verified"].map((state, index) => (
@@ -728,50 +739,50 @@ function MedicationScreen({
   return (
     <>
       <ScreenHeader
-        eyebrow="Medication reconciliation · H3 professional review"
-        title="HEARTH found a dose conflict and stopped"
-        description="Both versions remain visible. HEARTH neither selects a dose nor recommends starting, stopping, or changing treatment."
+        eyebrow="Medicine question"
+        title="Two lists show different insulin amounts"
+        description="HEARTH will not choose between them. A pharmacist or doctor needs to confirm the current amount."
       />
       <section className="med-comparison">
         <article className="med-source current-source">
-          <div><span>Newer source</span><SourceBadge sourceId="SRC-02" /></div>
+          <div><span>Hospital list · July 26</span><SourceBadge sourceId="SRC-02" /></div>
           <h2>Insulin glargine</h2>
           <strong>18 units · nightly</strong>
-          <p>Hospital medication list · July 26 · medication table row 3</p>
-          <span className="flag flag-review">Not active while conflict remains</span>
+          <p>Medication table, row 3</p>
+          <span className="flag flag-review">Needs confirmation</span>
         </article>
         <div className="conflict-mark" aria-label="Conflicting instructions">
           <CircleAlert aria-hidden="true" />
-          <span>conflicts with</span>
+          <span>does not match</span>
         </div>
         <article className="med-source older-source">
-          <div><span>Older source</span><SourceBadge sourceId="SRC-03" /></div>
+          <div><span>Home list · May 4</span><SourceBadge sourceId="SRC-03" /></div>
           <h2>Insulin glargine</h2>
           <strong>24 units · nightly</strong>
-          <p>Prior home list · May 4 · retained for audit</p>
-          <span className="flag flag-outdated">Superseded · cannot activate</span>
+          <p>Older list kept for comparison</p>
+          <span className="flag flag-outdated">Older list</span>
         </article>
       </section>
       <div className="safety-stop">
         <CircleAlert aria-hidden="true" />
         <div>
-          <span>HEARTH SAFETY STOP · H101</span>
-          <strong>The active dose is unknown.</strong>
-          <p>A pharmacist or prescriber must reconcile the exact sources. Maya must explicitly confirm the response before the instruction becomes active.</p>
+          <span>Needs a clear answer</span>
+          <strong>Do not use HEARTH to choose an amount.</strong>
+          <p>Ask a pharmacist or doctor which list is current.</p>
         </div>
       </div>
       <section className="workflow-panel">
         <div className="workflow-step complete">
-          <span><Check /></span><div><strong>Conflict detected</strong><p>Exact excerpts and dates preserved.</p></div>
+          <span><Check /></span><div><strong>Different amounts found</strong><p>Both lists and dates are shown above.</p></div>
         </div>
         <div className={`workflow-step ${resolution.pharmacistQuestionPrepared ? "complete" : "current"}`}>
           <span>{resolution.pharmacistQuestionPrepared ? <Check /> : "2"}</span>
           <div>
-            <strong>Prepare a structured pharmacist question</strong>
+            <strong>Prepare the question</strong>
             <p>“Which insulin glargine instruction is active: 18 units from July 26 or 24 units from May 4?”</p>
             {!resolution.pharmacistQuestionPrepared && (
               <button className="primary-button" onClick={() => setResolution((value) => ({ ...value, pharmacistQuestionPrepared: true }))}>
-                Prepare for Maya’s approval
+                Prepare this question
               </button>
             )}
           </div>
@@ -779,17 +790,17 @@ function MedicationScreen({
         <div className={`workflow-step ${resolution.medicationResolved ? "complete" : resolution.pharmacistQuestionPrepared ? "current" : ""}`}>
           <span>{resolution.medicationResolved ? <Check /> : "3"}</span>
           <div>
-            <strong>Record controlled professional response</strong>
-            <p>A response is not a real integration. The Phase 1 adapter records the resolver, source, timestamp, and Maya’s confirmation.</p>
+            <strong>Record the answer</strong>
+            <p>In this demo, the example answer includes who replied, when they replied, and Maya’s confirmation.</p>
             {resolution.pharmacistQuestionPrepared && !resolution.medicationResolved && (
-              <button className="secondary-button" onClick={() => setResolution((value) => ({ ...value, medicationResolved: true }))}>
-                Simulate response + Maya confirmation
+              <button className="primary-button" onClick={() => setResolution((value) => ({ ...value, medicationResolved: true }))}>
+                Record the example answer
               </button>
             )}
           </div>
         </div>
         <div className={`workflow-step ${resolution.medicationResolved ? "current" : ""}`}>
-          <span>4</span><div><strong>Track refill outcome</strong><p>CCO-002 stays open until the pharmacy confirms a fill or a blocking result.</p></div>
+          <span>4</span><div><strong>Check the refill</strong><p>This stays open until the pharmacy confirms what happened.</p></div>
         </div>
       </section>
       <SimulationNotice />
@@ -801,13 +812,12 @@ function AppointmentsScreen({ resolution, setResolution }: {
   resolution: DemoResolution;
   setResolution: React.Dispatch<React.SetStateAction<DemoResolution>>;
 }) {
-  const disclosure = minimumNecessaryDisclosure("Daniel transportation");
   return (
     <>
       <ScreenHeader
-        eyebrow="Appointment and follow-up workflow"
+        eyebrow="Upcoming visit"
         title="Cardiology · August 1 at 10:00 AM"
-        description="The appointment is not ready until transportation is accepted, mobility support is known, visit materials are prepared, and the provider outcome is tracked."
+        description="Transportation is the next thing to confirm."
       />
       <section className="appointment-layout">
         <div className="appointment-timeline">
@@ -825,30 +835,30 @@ function AppointmentsScreen({ resolution, setResolution }: {
           ))}
         </div>
         <aside className="disclosure-card">
-          <p className="eyebrow">Preview for Daniel</p>
-          <h2>Minimum necessary task request</h2>
+          <p className="eyebrow">What Daniel will see</p>
+          <h2>Ride request</h2>
           <dl>
             <div><dt>Date & time</dt><dd>Aug 1 · pickup 9:10 AM</dd></div>
             <div><dt>Location</dt><dd>Lakeshore Cardiology, north entrance</dd></div>
             <div><dt>Support</dt><dd>Foldable walker; allow extra entry time</dd></div>
           </dl>
           <div className="withheld-box">
-            <strong>Intentionally withheld</strong>
-            <p>{disclosure.withheld.join(" · ")}</p>
+            <strong>Not shared</strong>
+            <p>Diagnosis, medicine list, and other private care details.</p>
           </div>
           <button
             className="primary-button"
             disabled={resolution.transportAssigned}
             onClick={() => setResolution((value) => ({ ...value, transportAssigned: true }))}
           >
-            {resolution.transportAssigned ? "Accepted by Daniel" : "Simulate Daniel accepting"}
+            {resolution.transportAssigned ? "Daniel confirmed the ride" : "Record Daniel’s example reply"}
           </button>
         </aside>
       </section>
       <section className="visit-questions">
         <div>
-          <p className="eyebrow">Prepared—not sent</p>
-          <h2>Questions for the visit</h2>
+          <p className="eyebrow">For the visit</p>
+          <h2>Questions to bring</h2>
         </div>
         <ol>
           <li>Which daily weight changes should use the configured call pathway in the discharge instructions?</li>
@@ -867,9 +877,9 @@ function CircleScreen({ resolution, setResolution }: {
   return (
     <>
       <ScreenHeader
-        eyebrow="Family care circle"
-        title="Help without exposing the whole care record"
-        description="Every invitation is purpose-specific, time-limited where appropriate, and immediately revocable."
+        eyebrow="Family help"
+        title="Share the task, not the whole care record"
+        description="Each helper sees only what they need for the task."
       />
       <section className="circle-grid">
         {careCircle.map((person, index) => (
@@ -886,13 +896,13 @@ function CircleScreen({ resolution, setResolution }: {
       </section>
       <section className="delegation-panel">
         <div>
-          <p className="eyebrow">Recommended redistribution</p>
-          <h2>Return 5.2 hours to Maya this week</h2>
-          <p>This is an operational capacity estimate—not a burnout diagnosis.</p>
+          <p className="eyebrow">Help plan</p>
+          <h2>Give Maya back about 5 hours this week</h2>
+          <p>This is a time estimate, not a medical judgment.</p>
         </div>
         <div className="delegation-list">
           <div><span>Transportation + pickup</span><strong>Daniel · 3h 20m</strong><small>Task-specific access</small></div>
-          <div><span>Scale acquisition</span><strong>Community resource · 45m</strong><small>No clinical details needed</small></div>
+          <div><span>Scale pickup</span><strong>Community service · 45m</strong><small>No medical details needed</small></div>
           <div><span>Home safety + supply checks</span><strong>Robert · 1h 05m</strong><small>Existing household access</small></div>
         </div>
         <button
@@ -900,7 +910,7 @@ function CircleScreen({ resolution, setResolution }: {
           disabled={resolution.eveningLoadRedistributed}
           onClick={() => setResolution((value) => ({ ...value, eveningLoadRedistributed: true }))}
         >
-          {resolution.eveningLoadRedistributed ? "Redistribution recorded" : "Approve this redistribution"}
+          {resolution.eveningLoadRedistributed ? "Help plan saved" : "Use this help plan"}
         </button>
       </section>
     </>
@@ -916,25 +926,25 @@ function CapacityScreen({ resolution, setResolution }: {
   return (
     <>
       <ScreenHeader
-        eyebrow="Caregiver capacity shield"
-        title="Can Maya realistically execute this week?"
-        description="The estimate includes travel, waiting, calls, forms, task complexity, training, physical demand, and backup availability."
+        eyebrow="My time and energy"
+        title="Does this week fit Maya’s available time?"
+        description="The estimate includes travel, waiting, calls, forms, and hands-on care."
       />
       <section className="capacity-hero">
         <div className="capacity-number">
           <span>{capacity.state}</span>
           <strong>{Math.abs(capacity.margin).toFixed(1)} hours</strong>
-          <p>{capacity.margin < 0 ? "more work than available" : "of controlled margin after redistribution"}</p>
+          <p>{capacity.margin < 0 ? "more care than Maya can cover" : "available after family help"}</p>
         </div>
         <div className="capacity-chart" role="img" aria-label={`${capacity.required} hours required compared with ${capacity.available} available`}>
           <div className="capacity-scale">
             <span>0h</span><span>7h</span><span>14h</span><span>21h</span><span>28h</span>
           </div>
           <div className="bar-line">
-            <span style={{ width: `${ratio}%` }}>{capacity.required}h required</span>
+            <span style={{ width: `${ratio}%` }}>{capacity.required}h of care</span>
           </div>
           <div className="available-marker" style={{ left: `${(capacity.available / 28) * 100}%` }}>
-            <span>{capacity.available}h available</span>
+            <span>{capacity.available}h Maya has</span>
           </div>
         </div>
       </section>
@@ -946,15 +956,15 @@ function CapacityScreen({ resolution, setResolution }: {
         <article><span>Training + setup</span><strong>2h 20m</strong><div style={{ width: "38%" }} /></article>
       </div>
       <section className="recommendation-table">
-        <div className="table-header"><span>Responsibility</span><span>Best pathway</span><span>Reason</span></div>
+        <div className="table-header"><span>Task</span><span>Suggested help</span><span>Why</span></div>
         <div><span>Transportation</span><strong>Delegate to Daniel</strong><span>Permitted and available</span></div>
-        <div><span>Refill request</span><strong>AI prepare + Maya approve</strong><span>Administrative; external action controlled</span></div>
-        <div><span>Wound care</span><strong>Professional support</strong><span>Training gap; H3 review</span></div>
-        <div><span>Weight equipment</span><strong>Community resource</strong><span>Equipment gap, no clinical data needed</span></div>
+        <div><span>Refill request</span><strong>HEARTH drafts; Maya approves</strong><span>Maya stays in control</span></div>
+        <div><span>Wound care</span><strong>Ask home health</strong><span>Training is still needed</span></div>
+        <div><span>Weight equipment</span><strong>Ask a community service</strong><span>No private care details needed</span></div>
       </section>
       {!resolution.eveningLoadRedistributed && (
         <button className="primary-button wide-action" onClick={() => setResolution((value) => ({ ...value, eveningLoadRedistributed: true }))}>
-          Apply permitted redistribution <ArrowRight size={17} />
+          Use this help plan <ArrowRight size={17} />
         </button>
       )}
     </>
@@ -967,14 +977,14 @@ function ConsentScreen() {
   return (
     <>
       <ScreenHeader
-        eyebrow="Permission & choice vault"
-        title="Eleanor controls purpose, person, and time"
-        description="Consent is not a checkbox. Each use is role-specific, revocable, understandable, and logged."
+        eyebrow="Sharing"
+        title="Choose what each helper can see"
+        description="Access can be limited by task and removed at any time."
       />
       <section className="choice-banner">
         <div className="case-monogram">EB</div>
-        <div><strong>Eleanor participated with supported decision-making.</strong><p>Moderate dementia does not automatically remove her authority or preferences.</p></div>
-        <span className="flag flag-reviewed">Reviewed Jul 27</span>
+        <div><strong>Eleanor took part in this choice.</strong><p>Her preferences stay visible to the family.</p></div>
+        <span className="flag flag-reviewed">Checked July 27</span>
       </section>
       <section className="permission-table">
         <div className="table-header"><span>Purpose</span><span>Who</span><span>May see</span><span>Withheld</span><span>Expires</span></div>
@@ -986,27 +996,27 @@ function ConsentScreen() {
       </section>
       <section className="autonomy-panel">
         <div>
-          <p className="eyebrow">Adjustable AI authority</p>
-          <h2>External action default: Prepare</h2>
-          <p>HEARTH drafts low-risk administrative actions. Maya approves before anything leaves the household.</p>
+          <p className="eyebrow">How HEARTH helps</p>
+          <h2>HEARTH prepares. Maya approves.</h2>
+          <p>Nothing is sent outside the household until Maya reviews it.</p>
         </div>
-        <div className="segmented-control" role="group" aria-label="AI autonomy level">
+        <div className="segmented-control" role="group" aria-label="How HEARTH may help">
           {["Organize", "Recommend", "Prepare", "Delegate"].map((item) => (
             <button key={item} aria-pressed={mode === item} className={mode === item ? "active" : ""} onClick={() => setMode(item)}>{item}</button>
           ))}
         </div>
         <p className="mode-explanation">
-          {mode === "Organize" && "HEARTH structures information and takes no external action."}
-          {mode === "Recommend" && "HEARTH suggests next steps; the caregiver performs them."}
-          {mode === "Prepare" && "HEARTH prepares a draft; the caregiver reviews and approves it."}
-          {mode === "Delegate" && "Only specifically approved low-risk actions use a labeled simulated adapter."}
+          {mode === "Organize" && "HEARTH puts information in order and sends nothing."}
+          {mode === "Recommend" && "HEARTH suggests a next step. The caregiver does it."}
+          {mode === "Prepare" && "HEARTH prepares a draft. The caregiver reviews and approves it."}
+          {mode === "Delegate" && "Only approved, low-risk example tasks can be handed off."}
         </p>
       </section>
       <div className={`revocation-card ${revoked ? "revoked" : ""}`}>
         <KeyRound aria-hidden="true" />
         <div>
           <strong>Daniel’s transportation access</strong>
-          <p>{revoked ? "Revoked immediately. A permission-history event was recorded." : "Task-specific · expires Aug 1 at 6:00 PM · diagnosis access blocked"}</p>
+          <p>{revoked ? "Access removed. The change was saved." : "Ride details only · ends August 1 at 6:00 PM · medical details are not shared"}</p>
         </div>
         <button className="secondary-button" disabled={revoked} onClick={() => setRevoked(true)}>
           {revoked ? "Access revoked" : "Revoke now"}
@@ -1021,9 +1031,9 @@ function ReceiptsScreen() {
   return (
     <>
       <ScreenHeader
-        eyebrow="Accountability receipts"
-        title="Every consequential AI action can be inspected"
-        description="Receipts show why an action occurred, what was shared, what was withheld, whose permission applied, and what remains unknown."
+        eyebrow="Activity history"
+        title="See what happened and why"
+        description="Each entry shows what was shared, who approved it, and what still needs follow-up."
       />
       <section className="receipt-layout">
         <div className="receipt-list">
@@ -1061,15 +1071,15 @@ function TrustScreen() {
   return (
     <>
       <ScreenHeader
-        eyebrow="Trust & privacy center"
-        title="Access, correction, export, and deletion"
-        description="This controlled prototype uses synthetic records. Production compliance obligations remain to be determined with Phase 2 deployment partners."
+        eyebrow="Privacy"
+        title="Control access to this care record"
+        description="This demo uses example records. You can review access, export a copy, or request deletion."
       />
       <div className="trust-principles">
-        <article><ShieldCheck /><strong>No sale of personal data</strong><p>No advertising based on health information.</p></article>
-        <article><Accessibility /><strong>Care-recipient control</strong><p>Purpose-specific, revocable permissions.</p></article>
-        <article><PackageCheck /><strong>Portable by design</strong><p>Human-readable export and printable mission.</p></article>
-        <article><History /><strong>Auditable actions</strong><p>Access, approvals, corrections, and failed authorization attempts.</p></article>
+        <article><ShieldCheck /><strong>Personal data is not sold</strong><p>No ads based on care information.</p></article>
+        <article><Accessibility /><strong>Eleanor stays involved</strong><p>Sharing can be limited or removed.</p></article>
+        <article><PackageCheck /><strong>Download a copy</strong><p>Export or print the care plan.</p></article>
+        <article><History /><strong>Review activity</strong><p>See access, approvals, and corrections.</p></article>
       </div>
       <section className="audit-log">
         <div className="section-title-row"><div><p className="eyebrow">Household audit trail</p><h2>Recent access events</h2></div><span className="flag flag-reviewed">Synthetic log</span></div>
@@ -1086,7 +1096,7 @@ function TrustScreen() {
         ))}
       </section>
       <div className="data-actions">
-        <button className="secondary-button"><PackageCheck size={17} /> Export synthetic household record</button>
+        <button className="secondary-button"><PackageCheck size={17} /> Download example record</button>
         <button className="secondary-button" onClick={() => setDeleteRequested(true)} disabled={deleteRequested}>
           <Archive size={17} /> {deleteRequested ? "Deletion request recorded" : "Request deletion"}
         </button>
@@ -1177,47 +1187,47 @@ function DemoScreen({
   return (
     <>
       <ScreenHeader
-        eyebrow="Guided reviewer demo · 3–5 minutes"
-        title="Watch a fragmented plan become executable"
-        description="Each step changes real mission state, preserves evidence, and maintains human or professional authority."
+        eyebrow="Reviewer tour · 3–5 minutes"
+        title="See how the care plan becomes clear"
+        description="Each step changes the example while keeping people in control."
       >
         <button className="secondary-button" onClick={() => setResolution(initialResolution)}>
-          <RefreshCcw size={16} /> Reset Reviewer Demo
+          <RefreshCcw size={18} /> Restart tour
         </button>
       </ScreenHeader>
       <section className="demo-status">
         <div>
-          <span>Mission transformation</span>
+          <span>Care plan change</span>
           <div className="status-transition">
-            <span className="status-pill status-blocked">× NOT EXECUTABLE</span>
+            <span className="status-pill status-blocked">! Needs attention</span>
             <ArrowRight />
             <StatusMark status={mission.status === "NOT EXECUTABLE" ? "READY WITH CONTROLS" : mission.status} />
           </div>
         </div>
         <div className="demo-progress">
           <strong>{completed} of {demoSteps.length}</strong>
-          <span>safe resolution steps recorded</span>
+          <span>steps complete</span>
           <div><span style={{ width: `${(completed / demoSteps.length) * 100}%` }} /></div>
         </div>
       </section>
       {next ? (
         <section className="next-demo-step">
-          <span>Next controlled action · {String(completed + 1).padStart(2, "0")}</span>
+          <span>Next step · {String(completed + 1).padStart(2, "0")}</span>
           <h2>{next.title}</h2>
           <p>{next.detail}</p>
           <button
             className="primary-button"
             onClick={() => setResolution((value) => ({ ...value, [next.key]: true }))}
           >
-            Run this step <ArrowRight size={17} />
+            Complete this step <ArrowRight size={17} />
           </button>
         </section>
       ) : (
         <section className="next-demo-step complete-demo">
           <Check aria-hidden="true" />
-          <span>Mission control state reached</span>
-          <h2>Ready with controls</h2>
-          <p>Clinical uncertainty remains with professionals, privacy boundaries remain active, and every external workflow stays open until an outcome is recorded.</p>
+          <span>Tour complete</span>
+          <h2>Ready with checks</h2>
+          <p>Medicine questions stay with professionals, sharing limits stay active, and tasks stay open until someone confirms the result.</p>
         </section>
       )}
       <section className="demo-step-list">
@@ -1246,18 +1256,13 @@ export default function HearthApp() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const runNextStep = () => {
-    const next = demoSteps.find((step) => !resolution[step.key]);
-    if (next) setResolution((value) => ({ ...value, [next.key]: true }));
-  };
-
   const renderScreen = () => {
     switch (screen) {
       case "welcome": return <WelcomeScreen onOpen={() => goTo("today")} status={mission.status} />;
       case "today": return <TodayScreen goTo={goTo} resolution={resolution} />;
       case "inbox": return <InboxScreen goTo={goTo} />;
       case "compile": return <CompilationScreen resolution={resolution} setResolution={setResolution} />;
-      case "reality": return <RealityScreen mission={mission} runNextStep={runNextStep} />;
+      case "reality": return <RealityScreen mission={mission} goTo={goTo} resolution={resolution} />;
       case "board": return <BoardScreen resolution={resolution} />;
       case "medications": return <MedicationScreen resolution={resolution} setResolution={setResolution} />;
       case "appointments": return <AppointmentsScreen resolution={resolution} setResolution={setResolution} />;
@@ -1278,57 +1283,82 @@ export default function HearthApp() {
       <aside className={`sidebar ${mobileNavOpen ? "is-open" : ""}`}>
         <div className="brand">
           <div className="brand-mark" aria-hidden="true"><HeartHandshake /></div>
-          <div><strong>HEARTH</strong><span>Care execution assurance</span></div>
+          <div><strong>HEARTH</strong><span>Care, one step at a time</span></div>
           <button className="mobile-close" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)}><X /></button>
         </div>
         <div className="case-switcher">
           <div className="case-monogram">EB</div>
-          <div><strong>Eleanor’s mission</strong><span>Synthetic · day 2 at home</span></div>
+          <div><strong>Eleanor’s care</strong><span>Example · day 2 at home</span></div>
           <ChevronRight size={16} />
         </div>
         <nav aria-label="HEARTH sections">
-          {(["Mission", "Safeguards", "Proof"] as const).map((group) => (
-            <div className="nav-group" key={group}>
-              <span>{group}</span>
-              {navItems.filter((item) => item.group === group).map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button key={item.id} className={screen === item.id ? "active" : ""} onClick={() => goTo(item.id)} aria-current={screen === item.id ? "page" : undefined}>
-                    <Icon size={17} aria-hidden="true" />
-                    <span>{item.label}</span>
-                    {item.id === "reality" && <b>{mission.blockerCount}</b>}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="nav-group">
+            <span>Care</span>
+            {navItems.filter((item) => item.group === "Care").map((item) => {
+              const Icon = item.icon;
+              return (
+                <button key={item.id} className={screen === item.id ? "active" : ""} onClick={() => goTo(item.id)} aria-current={screen === item.id ? "page" : undefined}>
+                  <Icon size={20} aria-hidden="true" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          {(["More", "Reviewer"] as const).map((group) => (
+            <details className="nav-details" key={`${group}-${screen}`} open={navItems.some((item) => item.group === group && item.id === screen) || undefined}>
+              <summary>{group === "More" ? "More care tools" : "For reviewers"}</summary>
+              <div className="nav-group">
+                {navItems.filter((item) => item.group === group).map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button key={item.id} className={screen === item.id ? "active" : ""} onClick={() => goTo(item.id)} aria-current={screen === item.id ? "page" : undefined}>
+                      <Icon size={19} aria-hidden="true" />
+                      <span>{item.label}</span>
+                      {item.id === "reality" && <b>{mission.blockerCount}</b>}
+                    </button>
+                  );
+                })}
+              </div>
+            </details>
           ))}
         </nav>
         <div className="sidebar-footer">
           <ShieldCheck size={17} />
-          <div><strong>Prepare by default</strong><span>Human approval for external action</span></div>
+          <div><strong>You stay in control</strong><span>Review before anything is shared</span></div>
         </div>
       </aside>
       {mobileNavOpen && <button className="mobile-scrim" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} />}
       <div className="main-column">
         <header className="topbar">
           <button className="mobile-menu" aria-label="Open navigation" onClick={() => setMobileNavOpen(true)}><Menu /></button>
-          <div className="breadcrumb"><span>Eleanor’s mission</span><ChevronRight size={14} /><strong>{currentNav.label}</strong></div>
+          <div className="breadcrumb"><span>Eleanor’s care</span><ChevronRight size={16} /><strong>{currentNav.label}</strong></div>
           <div className="topbar-actions">
-            <span className="synthetic-chip">Synthetic data</span>
+            <span className="synthetic-chip">Example household</span>
             <StatusMark status={mission.status} />
-            <button className="reviewer-button" onClick={() => goTo("demo")}>Reviewer demo</button>
-            <button className="reviewer-button reviewer-reset" onClick={() => { setResolution(initialResolution); goTo("demo"); }}>Reset Reviewer Demo</button>
+            <button className="reviewer-button" onClick={() => goTo("demo")}>Reviewer tour</button>
           </div>
         </header>
         <main id="main-content" tabIndex={-1} className={screen === "welcome" ? "welcome-main" : ""}>
           {renderScreen()}
         </main>
         <footer className="app-footer">
-          <span>HEARTH TRL-3 proof of concept · Track 1</span>
-          <span>All people and records shown are synthetic.</span>
-          <span>Not for clinical use.</span>
+          <span>HEARTH example</span>
+          <span>All people and records shown are made up.</span>
+          <span>HEARTH does not give medical advice.</span>
         </footer>
       </div>
+      <nav className="mobile-quick-nav" aria-label="Quick navigation">
+        {(["today", "board", "inbox", "circle"] as const).map((id) => {
+          const item = navItems.find((entry) => entry.id === id)!;
+          const Icon = item.icon;
+          return (
+            <button key={id} className={screen === id ? "active" : ""} onClick={() => goTo(id)} aria-current={screen === id ? "page" : undefined}>
+              <Icon size={21} aria-hidden="true" />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }

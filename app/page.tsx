@@ -1,5 +1,5 @@
-import HearthApp from "./HearthApp";
+import AppEntry from "./AppEntry";
 
 export default function Home() {
-  return <HearthApp />;
+  return <AppEntry />;
 }

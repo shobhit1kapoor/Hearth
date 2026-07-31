@@ -1,74 +1,69 @@
 # HEARTH
 
-**Home Execution Assurance, Resilience, and Trust Hub**
+HEARTH turns care instructions into a clear, shared plan. It helps a caregiver collect documents or notes, review extracted responsibilities, resolve uncertainty, ask family for specific help, and keep a source trail for every task.
 
-HEARTH is a caregiver-first care-execution and coordination proof of concept for Track 1 of the U.S. Administration for Community Living Caregiver AI Prize Challenge. It addresses the first 30 days after an older adult with dementia and multiple chronic conditions returns home from a hospital or rehabilitation facility.
+HEARTH does not diagnose, choose between conflicting medical instructions, or change treatment. Anything uncertain or high-risk stays blocked for caregiver or professional review.
 
-This repository is a Technology Readiness Level 3 controlled prototype. It is not a clinical tool, medical device, production health record, or real provider integration.
+## Live reviewer build
 
-## What works
+[Open the safe synthetic reviewer build](https://hearth-care-five.vercel.app).
 
-- A resettable synthetic post-discharge case with 10 sources and 26 Care Commitment Objects.
-- A deterministic Reality Check that begins at `NOT EXECUTABLE` and reaches `READY WITH CONTROLS` only after permitted resolutions.
-- Exact provenance, confidence, safety authority, consent, completion evidence, backup, escalation, and event history on every responsibility.
-- Explicit medication-conflict blocking and professional escalation.
-- Purpose-specific transportation disclosure that withholds diagnosis, medication, insurance, and caregiver-private data.
-- Explainable caregiver-capacity calculation and permission-aware redistribution.
-- Closed-loop lifecycle views where drafts and sent messages do not equal completion.
-- Accountability Receipts, access history, revocation, export, and deletion-request controls.
-- Smart 40 and a 60-case focused benchmark with reproducible JSON and readable reports.
-- Responsive, keyboard-operable, printable screens for the complete reviewer journey.
+Choose **Try the sample case**. Real caregiver data remains disabled on this deployment because its external services are not configured.
 
-## What is simulated
+## What you can test now
 
-Pharmacy, provider, appointment, family-helper, community-resource, FHIR-like, export, and deletion outcomes are controlled Phase 1 simulations. They are visibly labeled in the interface. There are no real health-system connections.
+The **sample case** is fully local, synthetic, and resettable. It contains 10 example sources and 26 care responsibilities. Use it to test medication-conflict blocking, task assignment, minimum disclosure, permissions, workload support, translation safety, and the nine-step reviewer tour.
 
-## Run locally
+The **real caregiver workspace** is implemented but intentionally unavailable until Supabase and the other approved services are configured. It never silently substitutes browser-only storage for real persistence.
 
-Requirements: Node.js 22.13 or newer.
+## Start the app
+
+You need Node.js 22.13 or newer.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Open the local address printed by the development server.
+Open the address printed by Next.js. It is normally `http://localhost:3000`.
 
-## Verify
+Choose:
+
+- **Try the sample case** to test immediately with made-up information.
+- **Create my care space** to test the real sign-up and persistent workflow after services are configured.
+
+Do not enter real patient information in a local or reviewer deployment.
+
+## Run all checks
 
 ```bash
 npm test
+npm run lint
+npm run typecheck
+npm run validate:accessibility
+npm audit --omit=dev
 ```
 
-The command runs unit safety checks, the consecutive Smart 40, the 60-case focused benchmark, a production build, and server-render checks. Generated evidence is written to:
+`npm test` runs lifecycle and permission checks, AI output-contract checks, database/RLS checks, the Smart 40 and focused benchmark, a production build, and server-render checks.
 
-- `evidence/validation-results.json`
-- `docs/validation-report.md`
+## Configure real caregiver mode
 
-## Reviewer demo
+1. Copy `.env.example` to `.env.local`.
+2. Create a Supabase project and apply `supabase/migrations/202607300001_hearth_core.sql`.
+3. Fill in the Supabase browser and server keys.
+4. Add NVIDIA NIM, Upstash, Resend, and Sentry settings.
+5. Keep `ALLOW_REAL_PATIENT_DATA=false` until an approved privacy and deployment review says otherwise.
+6. Run the persistence acceptance test in [docs/production-acceptance.md](docs/production-acceptance.md).
 
-Open **Guided reviewer demo** in the application and select **Reset demo**. Follow the nine controlled actions. The mission changes from `NOT EXECUTABLE` to `READY WITH CONTROLS`; clinical uncertainty remains assigned to qualified professionals and task-specific access remains in force.
+Configuration details are in [docs/production-setup.md](docs/production-setup.md). Architecture and safety boundaries are in [docs/production-architecture.md](docs/production-architecture.md).
 
-The detailed script is in [docs/demo-script.md](docs/demo-script.md). The evidence map is in [docs/submission-evidence-index.md](docs/submission-evidence-index.md).
+## Current status
 
-## Evidence honesty
+- Local synthetic reviewer mode: working.
+- Public synthetic reviewer deployment: working at the link above.
+- Production build and local automated checks: passing.
+- Production dependency audit: zero known production vulnerabilities.
+- Live Supabase migration, NVIDIA request, email delivery, rate limiting, and Sentry event: not yet verified because those service credentials are not configured.
+- Real persistence acceptance: not yet run.
 
-- All people, organizations, records, outcomes, and timestamps in the product are synthetic.
-- No caregiver interview material was available in this workspace; research documents are marked awaiting evidence and contain no invented participants or quotations.
-- Deterministic fixture results do not establish clinical effectiveness or real-world accuracy.
-- Net workflow time saved is not reported because timed caregiver testing has not occurred.
-- HEARTH makes no claim of HIPAA certification, FDA status, federal endorsement, reimbursement, or partner commitment.
-
-## Documentation
-
-The `docs/` directory covers product scope, domain model, safety, privacy, security, accessibility, threat modeling, model governance, validation, roadmaps, judging traceability, research placeholders, and known limitations.
-
-Official challenge requirements reviewed:
-
-- [ACL Caregiver AI Challenge](https://acl.gov/caregiver-ai-challenge)
-- [Track 1 Phase 1 judging criteria](https://acl.gov/caregiver-ai-judging-track1)
-- [Phase 1 application outline](https://acl.gov/caregiver-ai-application-outline)
-- [Technology readiness guide](https://acl.gov/caregiver-ai-tech-readiness-guide)
-- [Definitions, FAQs, and resources](https://acl.gov/caregiver-ai-definitions-faq)
-
-HEARTH does not use ACL, HHS, or other government seals and does not imply federal endorsement.
+HEARTH is not a medical device, clinical decision system, or emergency service. All reviewer data is synthetic.
