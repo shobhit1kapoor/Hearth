@@ -8,13 +8,13 @@ HEARTH does not diagnose, choose between conflicting medical instructions, or ch
 
 [Open the safe synthetic reviewer build](https://hearth-care-five.vercel.app).
 
-Choose **Open demo — no sign in** for the fastest review. The demo uses only made-up local data and can be reset at any time. The private caregiver workspace is also connected for controlled testing. Real patient data remains disabled on the public deployment.
+Choose **Open demo — no sign in**. The public app is demo-only, uses made-up local data, and can be reset at any time. Sign-in and real patient data are not available on the public deployment.
 
 ## What you can test now
 
 The **sample case** is fully local, synthetic, and resettable. It contains 10 example sources and 26 care responsibilities. Use it to test medication-conflict blocking, task assignment, minimum disclosure, permissions, workload support, translation safety, and the nine-step reviewer tour.
 
-The **private caregiver workspace** supports accounts, persistent care spaces, document analysis, family invitations, explicit invitation acceptance, minimum-disclosure permissions, and immediate access revocation. Use only synthetic or properly de-identified information during testing.
+The repository retains a private caregiver workspace implementation for a future controlled deployment, but it is not exposed by the public app.
 
 ## Start the app
 
@@ -27,10 +27,7 @@ npm run dev
 
 Open the address printed by Next.js. It is normally `http://localhost:3000`.
 
-Choose:
-
-- **Open demo — no sign in** to test immediately with made-up information.
-- **Sign in or create an account** to test the real persistent caregiver workflow after services are configured.
+Choose **Open demo — no sign in** to test immediately with made-up information.
 
 Do not enter real patient information in a local or reviewer deployment.
 
@@ -46,7 +43,7 @@ npm audit --omit=dev
 
 `npm test` runs lifecycle and permission checks, AI output-contract checks, database/RLS checks, the Smart 40 and focused benchmark, a production build, and server-render checks.
 
-## Configure real caregiver mode
+## Configure private caregiver mode for future controlled testing
 
 1. Copy `.env.example` to `.env.local`.
 2. Create a Supabase project and apply these migrations in order:
@@ -64,10 +61,10 @@ Configuration details are in [docs/production-setup.md](docs/production-setup.md
 ## Current status
 
 - Local synthetic reviewer mode: working.
-- Public synthetic reviewer deployment: working at the link above.
+- Public synthetic reviewer deployment: working in demo-only mode at the link above.
 - Production build and local automated checks: passing.
 - Production dependency audit: zero known production vulnerabilities.
-- Production service readiness: Supabase, NVIDIA, Sentry, and database-backed rate limiting are active. External email is intentionally disabled; family access is saved and the caregiver receives a manual sign-in step.
+- Private service readiness: Supabase, NVIDIA, Sentry, and database-backed rate limiting are configured, but account features are not exposed by the public app. External email is intentionally disabled.
 - Live Supabase core, remediation, and rate-limit migrations: applied and verified.
 - A repeatable synthetic caregiver household can be provisioned with `npm run seed:synthetic`; its password stays in the ignored `.env.synthetic.local` file.
 - Live production acceptance: passed for Protocol 9-Delta refusal, invitation, acceptance, minimum disclosure, permission revocation, membership revocation, and NVIDIA note processing.
