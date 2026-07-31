@@ -6,6 +6,8 @@ const migrationUrl = new URL("../supabase/migrations/202607300001_hearth_core.sq
 const sql = await readFile(migrationUrl, "utf8");
 const remediationMigrationUrl = new URL("../supabase/migrations/202607310001_holdout_remediation.sql", import.meta.url);
 const remediationSql = await readFile(remediationMigrationUrl, "utf8");
+const rateLimitMigrationUrl = new URL("../supabase/migrations/202607310002_service_rate_limits.sql", import.meta.url);
+const rateLimitSql = await readFile(rateLimitMigrationUrl, "utf8");
 
 const requiredTables = [
   "profiles", "care_spaces", "care_space_members", "care_recipients",
@@ -64,4 +66,14 @@ test("remediation migration persists interpretation controls and correction conf
   assert.match(remediationSql, /create or replace function public\.accept_care_space_invitation\(invitation_id uuid\)/i);
   assert.match(remediationSql, /lower\(member\.invited_email\) = lower\(account_email\)/i);
   assert.match(remediationSql, /grant execute on function public\.accept_care_space_invitation\(uuid\) to authenticated/i);
+});
+
+test("production rate limiting has an atomic database fallback restricted to the service role", () => {
+  assert.match(rateLimitSql, /create table if not exists public\.service_rate_limits/i);
+  assert.match(rateLimitSql, /alter table public\.service_rate_limits enable row level security/i);
+  assert.match(rateLimitSql, /create or replace function public\.check_service_rate_limit/i);
+  assert.match(rateLimitSql, /pg_advisory_xact_lock/i);
+  assert.match(rateLimitSql, /on conflict \(limit_key\) do update/i);
+  assert.match(rateLimitSql, /revoke all on function public\.check_service_rate_limit[\s\S]+from authenticated/i);
+  assert.match(rateLimitSql, /grant execute on function public\.check_service_rate_limit[\s\S]+to service_role/i);
 });

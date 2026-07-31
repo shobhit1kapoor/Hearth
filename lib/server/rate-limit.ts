@@ -3,6 +3,7 @@ import "server-only";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { getServerEnvironment } from "@/lib/config/env";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
 export type RateLimitKind = "login" | "upload" | "ai" | "translation" | "demo_reset" | "email" | "export" | "deletion";
 
@@ -23,6 +24,26 @@ const memoryWindows = new Map<string, { count: number; resetAt: number }>();
 export async function limitRequest(kind: RateLimitKind, identifier: string) {
   const env = getServerEnvironment();
   const policy = policies[kind];
+  const duration = parseWindow(policy.window);
+  const database = createSupabaseAdminClient();
+  if (database) {
+    const { data, error } = await database.rpc("check_service_rate_limit", {
+      p_key: `${kind}:${identifier}`,
+      p_limit: policy.requests,
+      p_window_seconds: Math.ceil(duration / 1_000),
+    });
+    const result = Array.isArray(data) ? data[0] : data;
+    if (!error && result) {
+      return {
+        success: Boolean(result.success),
+        limit: policy.requests,
+        remaining: Number(result.remaining),
+        reset: new Date(result.reset_at).getTime(),
+        pending: Promise.resolve(),
+      };
+    }
+  }
+
   if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) {
     let limiter = configuredLimiters.get(kind);
     if (!limiter) {
@@ -43,7 +64,6 @@ export async function limitRequest(kind: RateLimitKind, identifier: string) {
   }
 
   const now = Date.now();
-  const duration = parseWindow(policy.window);
   const key = `${kind}:${identifier}`;
   const current = memoryWindows.get(key);
   if (!current || current.resetAt <= now) {

@@ -61,7 +61,10 @@ export function getServiceReadiness() {
   return {
     supabase: Boolean(env.NEXT_PUBLIC_SUPABASE_URL && env.NEXT_PUBLIC_SUPABASE_ANON_KEY && env.SUPABASE_SERVICE_ROLE_KEY),
     ai: Boolean(env.ENABLE_REAL_AI && env.NVIDIA_API_KEY),
-    rateLimiting: Boolean(env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN),
+    rateLimiting: Boolean(
+      (env.NEXT_PUBLIC_SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY)
+      || (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN),
+    ),
     email: Boolean(env.ENABLE_EXTERNAL_EMAIL && env.RESEND_API_KEY),
     monitoring: Boolean(env.NEXT_PUBLIC_SENTRY_DSN),
     realPatientDataAllowed: env.ALLOW_REAL_PATIENT_DATA,

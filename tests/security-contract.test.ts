@@ -58,3 +58,11 @@ test("family invitations require sign-in, same-origin acceptance, and a database
   assert.match(source, /list_my_care_space_invitations/);
   assert.match(source, /accept_care_space_invitation/);
 });
+
+test("rate limiting prefers the atomic database limiter and keeps safe fallbacks", async () => {
+  const source = await read("../lib/server/rate-limit.ts");
+  assert.match(source, /createSupabaseAdminClient/);
+  assert.match(source, /\.rpc\("check_service_rate_limit"/);
+  assert.match(source, /Ratelimit\.slidingWindow/);
+  assert.match(source, /memoryWindows/);
+});
