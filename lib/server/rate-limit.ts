@@ -25,42 +25,30 @@ export async function limitRequest(kind: RateLimitKind, identifier: string) {
   const env = getServerEnvironment();
   const policy = policies[kind];
   const duration = parseWindow(policy.window);
-  const database = createSupabaseAdminClient();
-  if (database) {
-    const { data, error } = await database.rpc("check_service_rate_limit", {
-      p_key: `${kind}:${identifier}`,
-      p_limit: policy.requests,
-      p_window_seconds: Math.ceil(duration / 1_000),
-    });
-    const result = Array.isArray(data) ? data[0] : data;
-    if (!error && result) {
-      return {
-        success: Boolean(result.success),
-        limit: policy.requests,
-        remaining: Number(result.remaining),
-        reset: new Date(result.reset_at).getTime(),
-        pending: Promise.resolve(),
-      };
-    }
-  }
+  const databaseResult = await limitWithDatabase(kind, identifier, policy.requests, duration);
+  if (databaseResult) return databaseResult;
 
   if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) {
-    let limiter = configuredLimiters.get(kind);
-    if (!limiter) {
-      const redis = new Redis({
-        url: env.UPSTASH_REDIS_REST_URL,
-        token: env.UPSTASH_REDIS_REST_TOKEN,
-      });
-      limiter = new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(policy.requests, policy.window),
-        analytics: false,
-        prefix: `hearth:${kind}`,
-        timeout: 1_500,
-      });
-      configuredLimiters.set(kind, limiter);
+    try {
+      let limiter = configuredLimiters.get(kind);
+      if (!limiter) {
+        const redis = new Redis({
+          url: env.UPSTASH_REDIS_REST_URL,
+          token: env.UPSTASH_REDIS_REST_TOKEN,
+        });
+        limiter = new Ratelimit({
+          redis,
+          limiter: Ratelimit.slidingWindow(policy.requests, policy.window),
+          analytics: false,
+          prefix: `hearth:${kind}`,
+          timeout: 1_500,
+        });
+        configuredLimiters.set(kind, limiter);
+      }
+      return await limiter.limit(identifier);
+    } catch {
+      // The database and in-process limiter keep essential actions available.
     }
-    return limiter.limit(identifier);
   }
 
   const now = Date.now();
@@ -79,6 +67,84 @@ export async function limitRequest(kind: RateLimitKind, identifier: string) {
     reset: current.resetAt,
     pending: Promise.resolve(),
   };
+}
+
+async function limitWithDatabase(
+  kind: RateLimitKind,
+  identifier: string,
+  requestLimit: number,
+  duration: number,
+) {
+  const database = createSupabaseAdminClient();
+  if (!database) return null;
+  const limitKey = `${kind}:${identifier}`;
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const now = Date.now();
+    const { data: current, error: readError } = await database
+      .from("service_rate_limits")
+      .select("window_started_at, request_count, expires_at")
+      .eq("limit_key", limitKey)
+      .maybeSingle();
+    if (readError) return null;
+
+    if (!current) {
+      const reset = now + duration;
+      const { error } = await database.from("service_rate_limits").insert({
+        limit_key: limitKey,
+        window_started_at: new Date(now).toISOString(),
+        request_count: 1,
+        expires_at: new Date(reset).toISOString(),
+      });
+      if (!error) return rateLimitResult(true, requestLimit, requestLimit - 1, reset);
+      if (error.code === "23505") continue;
+      return null;
+    }
+
+    if (new Date(current.expires_at).getTime() <= now) {
+      const reset = now + duration;
+      const { data: resetWindow, error } = await database
+        .from("service_rate_limits")
+        .update({
+          window_started_at: new Date(now).toISOString(),
+          request_count: 1,
+          expires_at: new Date(reset).toISOString(),
+        })
+        .eq("limit_key", limitKey)
+        .eq("window_started_at", current.window_started_at)
+        .eq("request_count", current.request_count)
+        .select("request_count")
+        .maybeSingle();
+      if (error) return null;
+      if (resetWindow) return rateLimitResult(true, requestLimit, requestLimit - 1, reset);
+      continue;
+    }
+
+    const nextCount = Number(current.request_count) + 1;
+    const { data: updated, error } = await database
+      .from("service_rate_limits")
+      .update({ request_count: nextCount })
+      .eq("limit_key", limitKey)
+      .eq("window_started_at", current.window_started_at)
+      .eq("request_count", current.request_count)
+      .select("request_count")
+      .maybeSingle();
+    if (error) return null;
+    if (updated) {
+      return rateLimitResult(
+        nextCount <= requestLimit,
+        requestLimit,
+        Math.max(0, requestLimit - nextCount),
+        new Date(current.expires_at).getTime(),
+      );
+    }
+  }
+
+  return null;
+}
+
+function rateLimitResult(success: boolean, limit: number, remaining: number, reset: number) {
+  return { success, limit, remaining, reset, pending: Promise.resolve() };
 }
 
 function parseWindow(window: string) {

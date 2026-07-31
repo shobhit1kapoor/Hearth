@@ -22,7 +22,7 @@ security definer
 set search_path = public
 as $$
 declare
-  current_time timestamptz := clock_timestamp();
+  v_now timestamptz := clock_timestamp();
   current_count integer;
   current_reset timestamptz;
 begin
@@ -40,23 +40,23 @@ begin
   )
   values (
     p_key,
-    current_time,
+    v_now,
     1,
-    current_time + make_interval(secs => p_window_seconds)
+    v_now + make_interval(secs => p_window_seconds)
   )
   on conflict (limit_key) do update
   set
     window_started_at = case
-      when public.service_rate_limits.expires_at <= current_time then current_time
+      when public.service_rate_limits.expires_at <= v_now then v_now
       else public.service_rate_limits.window_started_at
     end,
     request_count = case
-      when public.service_rate_limits.expires_at <= current_time then 1
+      when public.service_rate_limits.expires_at <= v_now then 1
       else public.service_rate_limits.request_count + 1
     end,
     expires_at = case
-      when public.service_rate_limits.expires_at <= current_time
-        then current_time + make_interval(secs => p_window_seconds)
+      when public.service_rate_limits.expires_at <= v_now
+        then v_now + make_interval(secs => p_window_seconds)
       else public.service_rate_limits.expires_at
     end
   returning request_count, expires_at

@@ -62,7 +62,8 @@ test("family invitations require sign-in, same-origin acceptance, and a database
 test("rate limiting prefers the atomic database limiter and keeps safe fallbacks", async () => {
   const source = await read("../lib/server/rate-limit.ts");
   assert.match(source, /createSupabaseAdminClient/);
-  assert.match(source, /\.rpc\("check_service_rate_limit"/);
+  assert.match(source, /\.from\("service_rate_limits"\)/);
+  assert.match(source, /\.eq\("request_count", current\.request_count\)/);
   assert.match(source, /Ratelimit\.slidingWindow/);
   assert.match(source, /memoryWindows/);
 });
