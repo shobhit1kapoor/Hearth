@@ -1,6 +1,6 @@
 # Holdout remediation report
 
-Executed: 2026-07-31T14:44:37.337Z
+Executed: 2026-07-31T16:08:24.952Z
 
 The original locked holdout result remains unchanged at 15/20. This post-holdout suite verifies the controls added in response to its five retained failures.
 
