@@ -80,13 +80,23 @@ export async function POST(request: Request) {
       created_by: user.id,
     }).select().single();
     if (permissionError) throw permissionError;
-    const rate = await limitRequest("email", requestIdentifier(request, user.id));
-    const email = rate.success ? await sendHearthEmail({
+    let rateAvailable = true;
+    let rateAllowed = false;
+    try {
+      const rate = await limitRequest("email", requestIdentifier(request, user.id));
+      rateAllowed = rate.success;
+    } catch {
+      rateAvailable = false;
+    }
+    const email = rateAllowed ? await sendHearthEmail({
       to: input.email,
       subject: "You have a HEARTH care task invitation",
       text: `A family caregiver invited you to help with a specific care task in HEARTH. Sign in at ${getServerEnvironment().NEXT_PUBLIC_APP_URL} using this email address, then choose Accept invitation. You will only see the information shared for that task.`,
       idempotencyKey: `family-invite-${member.id}`,
-    }) : { sent: false as const, reason: "rate_limited" };
+    }) : {
+      sent: false as const,
+      reason: rateAvailable ? "rate_limited" : "rate_limit_unavailable",
+    };
     await supabase.from("permission_events").insert({
       care_space_id: input.careSpaceId,
       permission_id: permission.id,
