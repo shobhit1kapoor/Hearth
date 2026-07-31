@@ -21,7 +21,16 @@ export default function AppEntry() {
         </p>
         <div className="entry-actions">
           <div className="entry-action-choice entry-action-choice-primary">
-            <Link className="primary-button" href="/demo">Open demo — no sign in</Link>
+            <Link
+              className="primary-button"
+              href="/demo"
+              onClick={(event) => {
+                event.preventDefault();
+                window.location.assign("/demo");
+              }}
+            >
+              Open demo — no sign in
+            </Link>
             <span>Explore a complete made-up household. Nothing is saved to an account.</span>
           </div>
           <div className="entry-action-choice">

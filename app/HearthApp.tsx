@@ -1342,7 +1342,16 @@ export default function HearthApp() {
             <span className="synthetic-chip">Demo mode · No sign-in</span>
             <StatusMark status={mission.status} />
             <button className="reviewer-button" onClick={() => goTo("demo")}>Reviewer tour</button>
-            <Link className="demo-exit-button" href="/">Exit demo</Link>
+            <Link
+              className="demo-exit-button"
+              href="/"
+              onClick={(event) => {
+                event.preventDefault();
+                window.location.assign("/");
+              }}
+            >
+              Exit demo
+            </Link>
           </div>
         </header>
         <section className="demo-mode-banner" aria-label="Demo mode information">
