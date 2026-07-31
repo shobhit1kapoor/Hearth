@@ -19,7 +19,7 @@ Automated live check: set `HEARTH_ACCEPTANCE_URL` to the deployed origin, then r
 11. Translate a synthetic medication instruction. Confirm original and translation are both stored and protected terms are unchanged.
 12. Request export and open the downloaded file.
 13. Confirm deletion, then verify private objects and active records are gone and the minimal deletion record has no care content.
-14. Confirm Upstash limits repeated abuse, Resend delivers a generic invitation from a verified domain, and Sentry records a scrubbed test error. Until the domain is verified, confirm the UI clearly gives the caregiver the manual sign-in step without exposing care details.
+14. Confirm Upstash limits repeated abuse and Sentry records a scrubbed test error. When external email is disabled, confirm the UI clearly gives the caregiver the manual sign-in step without exposing care details. If email is later enabled, require delivery from a verified domain.
 15. Run `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`, and the accessibility audit against the deployment.
 
 Record the deployment URL, commit SHA, migration version, date, tester, evidence, and result. Any failed isolation, permission, medication-conflict, deletion, or false-completion check is release-blocking.

@@ -2,9 +2,9 @@
 
 ## Production connection status
 
-Supabase, NVIDIA, Upstash, Resend, and Sentry are configured on the public Vercel deployment. All migrations are applied. A disposable two-account live check passes the unknown-protocol refusal, invitation acceptance, task-only disclosure, permission revocation, and membership revocation. A live NVIDIA note was also processed successfully after extending the server duration for document analysis.
+Supabase, NVIDIA, Upstash, and Sentry are configured on the public Vercel deployment. External email is intentionally disabled, and the app uses its manual family-invitation fallback. All migrations are applied. A disposable two-account live check passes the unknown-protocol refusal, invitation acceptance, task-only disclosure, permission revocation, and membership revocation. A live NVIDIA note was also processed successfully after extending the server duration for document analysis.
 
-Real patient data is disabled on the public deployment. Resend is still in onboarding mode, so automatic email to arbitrary family addresses needs a verified sending domain; the app provides a manual sign-in fallback in the meantime. The broader production-acceptance checklist still requires evidence for synthetic PDF persistence, strict email delivery, export, deletion, outage behavior, and external-service observability.
+Real patient data is disabled on the public deployment. Automatic family email is outside the current launch scope; access grants persist and the app gives the caregiver the helper's manual sign-in step. The broader production-acceptance checklist still requires evidence for synthetic PDF persistence, export, deletion, outage behavior, and external-service observability.
 
 ## Evidence and research
 
