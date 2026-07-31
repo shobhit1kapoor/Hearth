@@ -56,6 +56,7 @@ try {
       acceptanceUrl,
       supabaseUrl,
       anonKey,
+      owner,
       email: ownerEmail,
       password,
       careSpaceId: activeCareSpaceId,
@@ -217,6 +218,7 @@ async function createInvitationThroughApi(input: {
   acceptanceUrl: string;
   supabaseUrl: string;
   anonKey: string;
+  owner: SupabaseClient;
   email: string;
   password: string;
   careSpaceId: string;
@@ -263,6 +265,19 @@ async function createInvitationThroughApi(input: {
     permission?: { id: string };
     email?: { sent: boolean; reason?: string };
   };
+  if (response.status !== 201) {
+    const members = await input.owner
+      .from("care_space_members")
+      .select("id, permissions(id)")
+      .eq("care_space_id", input.careSpaceId)
+      .eq("invited_email", input.helperEmail);
+    const invitationPersisted = Boolean(members.data?.[0]?.id);
+    const permissionPersisted = Array.isArray(members.data?.[0]?.permissions)
+      && members.data[0].permissions.length > 0;
+    throw new Error(
+      `${payload.error ?? "Family invitation API failed."} invitationPersisted=${invitationPersisted} permissionPersisted=${permissionPersisted}`,
+    );
+  }
   assert.equal(response.status, 201, payload.error ?? "Family invitation API failed.");
   assert.ok(payload.member?.id);
   assert.ok(payload.permission?.id);
