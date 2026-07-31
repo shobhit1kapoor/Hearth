@@ -2,9 +2,9 @@
 
 ## Production connection status
 
-Supabase, NVIDIA, Upstash, and Sentry are configured on the public Vercel deployment. External email is intentionally disabled, and the app uses its manual family-invitation fallback. All migrations are applied. A disposable two-account live check passes the unknown-protocol refusal, invitation acceptance, task-only disclosure, permission revocation, and membership revocation. A live NVIDIA note was also processed successfully after extending the server duration for document analysis.
+The public Vercel deployment is demo-only. It does not expose account creation, sign-in, uploads, or private caregiver workflows. The repository retains those implementations for future controlled testing; Supabase, NVIDIA, Upstash, and Sentry have been configured and their synthetic acceptance checks passed. External email is intentionally disabled.
 
-Real patient data is disabled on the public deployment. Automatic family email is outside the current launch scope; access grants persist and the app gives the caregiver the helper's manual sign-in step. The broader production-acceptance checklist still requires evidence for synthetic PDF persistence, export, deletion, outage behavior, and external-service observability.
+Real patient data is disabled on the public deployment. Automatic family email and public account access are outside the current launch scope. Before any private caregiver launch, the broader production-acceptance checklist still requires evidence for synthetic PDF persistence, export, deletion, outage behavior, and external-service observability.
 
 ## Evidence and research
 
@@ -16,7 +16,7 @@ Real patient data is disabled on the public deployment. Automatic family email i
 
 ## Product and AI
 
-- Reviewer-mode inputs are seeded synthetic fixtures, while private caregiver mode supports PDF, image, and text uploads with live model extraction. It does not provide FHIR ingestion or transcription.
+- Reviewer-mode inputs are seeded synthetic fixtures. The unexposed private caregiver implementation supports PDF, image, and text uploads with live model extraction. It does not provide FHIR ingestion or transcription.
 - Reviewer-mode state is intentionally resettable. Private caregiver state persists in Supabase.
 - Controlled compiler findings are deterministic and case-specific; live model output remains subject to strict schemas, abstention controls, and human review.
 - H4 urgent redirection is a documented boundary, not a production emergency pathway.

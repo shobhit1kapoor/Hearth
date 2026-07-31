@@ -44,9 +44,10 @@ test("server-renders the finished HEARTH application shell", async () => {
   assert.match(html, /<title>HEARTH · Care, one step at a time<\/title>/i);
   assert.match(html, /Care, one step at a time/);
   assert.match(html, /Turn care instructions into a clear plan/);
-  assert.match(html, /Sign in or create an account/);
   assert.match(html, /Open demo — no sign in/);
   assert.match(html, /Nothing is saved to an account/);
+  assert.match(html, /Sign-in and real patient data are not available/);
+  assert.doesNotMatch(html, /Sign in or create an account|Create my care space/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Starter Project/);
 });
 
@@ -54,8 +55,8 @@ test("renders accessible landmarks and safety language", async () => {
   const response = await render();
   const html = await response.text();
   assert.match(html, /<main[^>]*class="entry-main"/i);
-  assert.match(html, /HEARTH does not diagnose or change treatment/);
-  assert.match(html, /Real patient data stays disabled/);
+  assert.match(html, /Demo only\. Use made-up information/);
+  assert.match(html, /Sign-in and real patient data are not available/);
 });
 
 test("server-renders the public demo route without an account gate", async () => {

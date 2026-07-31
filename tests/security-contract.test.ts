@@ -97,6 +97,7 @@ test("public demo mode opens without authentication and stays separate from care
   const demoPage = await read("../app/demo/page.tsx");
   assert.match(entry, /Open demo — no sign in/);
   assert.match(entry, /href="\/demo"/);
+  assert.doesNotMatch(entry, /CaregiverApp|signInWith|create an account/);
   assert.match(demoPage, /<HearthApp/);
   assert.match(demo, /Made-up household\. No account is needed/);
   assert.match(demo, /setResolution\(initialResolution\)/);

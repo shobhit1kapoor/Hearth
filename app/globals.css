@@ -3625,6 +3625,11 @@ main {
   margin: 34px 0;
 }
 
+.entry-actions-single {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 430px;
+}
+
 .entry-actions .primary-button,
 .entry-actions .secondary-button {
   width: 100%;
