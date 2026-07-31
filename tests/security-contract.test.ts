@@ -72,6 +72,12 @@ test("family member and permission listings are restricted to care-space manager
   assert.match(source, /display_name/);
 });
 
+test("caregiver receives a clear manual step when invitation email is unavailable", async () => {
+  const source = await read("../app/CaregiverApp.tsx");
+  assert.match(source, /Access is saved, but the email could not be sent/);
+  assert.match(source, /open HEARTH and sign in with/);
+});
+
 test("validated sample waits for a helper selection before acceptance", async () => {
   const source = await read("../app/api/demo/load/route.ts");
   assert.match(source, /"Awaiting acceptance": "assigned"/);

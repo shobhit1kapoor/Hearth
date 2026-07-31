@@ -830,8 +830,17 @@ function FamilyView({ careSpaceId }: { careSpaceId: string }) {
         expiresAt: null,
       }),
     });
-    const payload = await response.json();
-    setMessage(response.ok ? "Invitation and task-specific access saved." : payload.error);
+    const payload = await response.json() as {
+      error?: string;
+      email?: { sent: boolean; reason?: string };
+    };
+    if (!response.ok) {
+      setMessage(payload.error ?? "HEARTH could not save this invitation.");
+    } else if (payload.email?.sent) {
+      setMessage("Invitation sent. The helper will see only the tasks you assign.");
+    } else {
+      setMessage(`Access is saved, but the email could not be sent. Ask ${form.name} to open HEARTH and sign in with ${form.email}.`);
+    }
     if (response.ok) {
       setForm({ ...form, name: "", email: "" });
       void load();
