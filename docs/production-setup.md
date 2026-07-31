@@ -35,7 +35,7 @@ The provider uses bounded retries, a timeout, strict JSON parsing, and Zod valid
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`
 
-Invitations contain no diagnosis, medication, document, or task detail. Sentry processing removes request bodies, user identity, and breadcrumbs before transmission.
+Verify the domain used by `EMAIL_FROM` in Resend before expecting delivery to arbitrary family addresses. Without a verified domain, HEARTH saves the access grant and shows the caregiver a clear manual sign-in step. Invitations contain no diagnosis, medication, document, or task detail. Sentry processing removes request bodies, user identity, and breadcrumbs before transmission.
 
 ### Security
 

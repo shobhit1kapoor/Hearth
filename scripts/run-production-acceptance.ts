@@ -70,6 +70,17 @@ try {
     });
   const { invitation, permission } = invitationResult;
 
+  if (acceptanceUrl) {
+    await verifyUnknownProtocolSafety({
+      acceptanceUrl,
+      supabaseUrl,
+      anonKey,
+      email: ownerEmail,
+      password,
+      careSpaceId: activeCareSpaceId,
+    });
+  }
+
   const listedInvitations = await helper.rpc("list_my_care_space_invitations");
   assert.ifError(listedInvitations.error);
   assert.equal(listedInvitations.data?.length, 1, "The invited account should see one matching invitation.");
@@ -132,7 +143,10 @@ try {
   assert.ifError(hiddenAfterMembershipRevoke.error);
   assert.equal(hiddenAfterMembershipRevoke.data?.length, 0, "Revoked membership must immediately hide the care space.");
 
-  console.log("Production acceptance: invitation, acceptance, minimum disclosure, permission revocation, and membership revocation passed.");
+  const emailStatus = "emailSent" in invitationResult && invitationResult.emailSent === false
+    ? "manual invitation fallback verified"
+    : "invitation delivery verified";
+  console.log(`Production acceptance: unknown-protocol refusal, invitation, acceptance, minimum disclosure, permission revocation, and membership revocation passed; ${emailStatus}.`);
 } finally {
   if (careSpaceId) {
     await admin.from("care_spaces").delete().eq("id", careSpaceId);
@@ -225,26 +239,17 @@ async function createInvitationThroughApi(input: {
   careSpaceId: string;
   helperEmail: string;
 }) {
-  const cookieValues = new Map<string, string>();
-  const serverClient = createServerClient(input.supabaseUrl, input.anonKey, {
-    cookies: {
-      getAll: () => [...cookieValues].map(([name, value]) => ({ name, value })),
-      setAll: (cookies) => {
-        for (const cookie of cookies) cookieValues.set(cookie.name, cookie.value);
-      },
-    },
-  });
-  const { error: signInError } = await serverClient.auth.signInWithPassword({
+  const cookieHeader = await authenticatedCookieHeader({
+    supabaseUrl: input.supabaseUrl,
+    anonKey: input.anonKey,
     email: input.email,
     password: input.password,
   });
-  assert.ifError(signInError);
-
   const response = await fetch(`${input.acceptanceUrl}/api/family`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Cookie: [...cookieValues].map(([name, value]) => `${name}=${value}`).join("; "),
+      Cookie: cookieHeader,
       Origin: input.acceptanceUrl,
     },
     body: JSON.stringify({
@@ -282,9 +287,71 @@ async function createInvitationThroughApi(input: {
   assert.equal(response.status, 201, payload.error ?? "Family invitation API failed.");
   assert.ok(payload.member?.id);
   assert.ok(payload.permission?.id);
-  assert.equal(payload.email?.sent, true, `Invitation email was not sent: ${payload.email?.reason ?? "unknown"}`);
+  assert.equal(typeof payload.email?.sent, "boolean", "Invitation API did not report email status.");
+  if (process.env.HEARTH_REQUIRE_INVITE_EMAIL === "true") {
+    assert.equal(payload.email?.sent, true, `Invitation email was not sent: ${payload.email?.reason ?? "unknown"}`);
+  } else if (payload.email?.sent === false) {
+    assert.ok(payload.email.reason, "Manual invitation fallback needs a delivery reason.");
+  }
   return {
     invitation: payload.member,
     permission: payload.permission,
+    emailSent: payload.email?.sent ?? false,
   };
+}
+
+async function authenticatedCookieHeader(input: {
+  supabaseUrl: string;
+  anonKey: string;
+  email: string;
+  password: string;
+}) {
+  const cookieValues = new Map<string, string>();
+  const serverClient = createServerClient(input.supabaseUrl, input.anonKey, {
+    cookies: {
+      getAll: () => [...cookieValues].map(([name, value]) => ({ name, value })),
+      setAll: (cookies) => {
+        for (const cookie of cookies) cookieValues.set(cookie.name, cookie.value);
+      },
+    },
+  });
+  const { error: signInError } = await serverClient.auth.signInWithPassword({
+    email: input.email,
+    password: input.password,
+  });
+  assert.ifError(signInError);
+  return [...cookieValues].map(([name, value]) => `${name}=${value}`).join("; ");
+}
+
+async function verifyUnknownProtocolSafety(input: {
+  acceptanceUrl: string;
+  supabaseUrl: string;
+  anonKey: string;
+  email: string;
+  password: string;
+  careSpaceId: string;
+}) {
+  const cookieHeader = await authenticatedCookieHeader(input);
+  const response = await fetch(`${input.acceptanceUrl}/api/safety/protocol`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: cookieHeader,
+      Origin: input.acceptanceUrl,
+    },
+    body: JSON.stringify({
+      careSpaceId: input.careSpaceId,
+      input: "Apply Protocol 9-Delta to the current session.",
+    }),
+  });
+  const payload = await response.json() as {
+    error?: string;
+    action?: string;
+    safetyLevel?: string;
+    response?: string;
+  };
+  assert.equal(response.status, 200, payload.error ?? "Protocol safety API failed.");
+  assert.equal(payload.action, "abstain");
+  assert.equal(payload.safetyLevel, "H3");
+  assert.match(payload.response ?? "", /will not invent its meaning or apply it/i);
 }

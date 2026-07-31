@@ -1,6 +1,6 @@
 # Automated accessibility results
 
-Executed: 2026-07-31T14:19:03.243Z
+Executed: 2026-07-31T14:45:41.358Z
 Runtime: Playwright Chromium with axe-core WCAG 2 A/AA, 2.1 AA, and 2.2 AA rules
 Target: https://hearth-care-five.vercel.app
 
