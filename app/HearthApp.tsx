@@ -33,6 +33,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import BurdenStudy from "./BurdenStudy";
 import {
@@ -1256,6 +1257,11 @@ export default function HearthApp() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const resetDemo = () => {
+    setResolution(initialResolution);
+    goTo("welcome");
+  };
+
   const renderScreen = () => {
     switch (screen) {
       case "welcome": return <WelcomeScreen onOpen={() => goTo("today")} status={mission.status} />;
@@ -1333,11 +1339,20 @@ export default function HearthApp() {
           <button className="mobile-menu" aria-label="Open navigation" onClick={() => setMobileNavOpen(true)}><Menu /></button>
           <div className="breadcrumb"><span>Eleanor’s care</span><ChevronRight size={16} /><strong>{currentNav.label}</strong></div>
           <div className="topbar-actions">
-            <span className="synthetic-chip">Example household</span>
+            <span className="synthetic-chip">Demo mode · No sign-in</span>
             <StatusMark status={mission.status} />
             <button className="reviewer-button" onClick={() => goTo("demo")}>Reviewer tour</button>
+            <Link className="demo-exit-button" href="/">Exit demo</Link>
           </div>
         </header>
+        <section className="demo-mode-banner" aria-label="Demo mode information">
+          <Sparkles size={19} aria-hidden="true" />
+          <div>
+            <strong>Demo mode</strong>
+            <span>Made-up household. No account is needed, and changes are not saved to a caregiver account.</span>
+          </div>
+          <button type="button" onClick={resetDemo}>Reset demo</button>
+        </section>
         <main id="main-content" tabIndex={-1} className={screen === "welcome" ? "welcome-main" : ""}>
           {renderScreen()}
         </main>

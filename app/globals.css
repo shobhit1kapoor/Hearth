@@ -354,6 +354,65 @@ h2 {
   padding: 0 13px;
 }
 
+.demo-exit-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--pine);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 9px 14px;
+  text-decoration: none;
+}
+
+.demo-exit-button:hover {
+  border-color: var(--pine);
+}
+
+.demo-mode-banner {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #d8e3dc;
+  background: #eef5f1;
+  color: var(--pine);
+  padding: 10px clamp(20px, 4vw, 58px);
+}
+
+.demo-mode-banner > div {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.demo-mode-banner strong {
+  font-size: 0.82rem;
+}
+
+.demo-mode-banner span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.demo-mode-banner button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--pine-2);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 9px 12px;
+}
+
 .mobile-menu {
   display: none;
   border: 0;
@@ -3560,15 +3619,37 @@ main {
 }
 
 .entry-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
   margin: 34px 0;
 }
 
 .entry-actions .primary-button,
 .entry-actions .secondary-button {
-  min-width: 210px;
+  width: 100%;
+}
+
+.entry-action-choice {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--white);
+  padding: 14px;
+}
+
+.entry-action-choice-primary {
+  border-color: #a9c5b6;
+  background: #f2f7f4;
+}
+
+.entry-action-choice > span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
 }
 
 .entry-safety-note,
@@ -4545,6 +4626,23 @@ main {
   .entry-actions .primary-button,
   .entry-actions .secondary-button {
     width: 100%;
+  }
+
+  .entry-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-mode-banner {
+    align-items: flex-start;
+    padding: 12px 16px;
+  }
+
+  .demo-mode-banner > svg {
+    margin-top: 4px;
+  }
+
+  .demo-mode-banner button {
+    flex: 0 0 auto;
   }
 
   .onboarding-form,

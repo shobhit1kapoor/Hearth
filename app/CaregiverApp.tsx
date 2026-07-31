@@ -367,7 +367,7 @@ function AuthScreen({
             <div>
               <strong>Private accounts need Supabase setup.</strong>
               <p>The integration is built, but no Supabase project is connected on this computer. You can still use the sample case.</p>
-              <button className="primary-button" onClick={onTrySample}>Try the sample case</button>
+              <button className="primary-button" onClick={onTrySample}>Open demo — no sign in</button>
             </div>
           </div>
         ) : (
